@@ -1,11 +1,13 @@
 {
-  "name": "first-freelance-project",
+  "name": "aytraders-pos",
   "version": "1.0.0",
-  "description": "first freelance project backend",
+  "description": "Offline POS (Faisal)",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "build:dist": "npm install --omit=dev && npx prisma generate",
+    "pkg": "pkg index.js -c pkg.config.json"
   },
   "repository": {
     "type": "git",
@@ -20,7 +22,16 @@
   },
   "homepage": "https://github.com/codebyfaisal/first-freelance-project#readme",
   "dependencies": {
+    "@prisma/client": "^6.16.2",
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "dayjs": "^1.11.18",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.11",
+    "nodemon": "^3.1.4",
+    "prisma": "^6.17.0"
   }
 }
