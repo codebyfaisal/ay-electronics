@@ -16,9 +16,6 @@ pids
 *.pid.lock
 
 # dotenv environment variables
-.env
-.env.*.local
-!.env.example
 
 # Prisma
 prisma/dev.db
