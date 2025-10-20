@@ -18,7 +18,7 @@ const MonthlySummaryTab = () => {
     data: summaryData,
     loading: fetchLoading,
     refetch,
-  } = useFetch(`/finance/monthly?page=${page}&limit=10`, {}, true);
+  } = useFetch(`/finance/summary?page=${page}&limit=10`, {}, true);
 
   const summaries = summaryData?.monthlySummaries || [];
   const total = summaryData?.total || 0;
@@ -43,31 +43,25 @@ const MonthlySummaryTab = () => {
 
   const handleRecalculate = async () => {
     const data = {
-      month: Number(recalcMonth),
-      year: Number(recalcYear),
+      startM: Number(recalcMonth),
+      startY: Number(recalcYear),
     };
-    const result = await post(
-      "/finance/monthly",
-      data,
+    const result = await post("/finance/summary", data,
       {
         server: true,
         message: `Summary for ${recalcMonth}/${recalcYear} generated successfully`
       }
     );
-    if (result) {
-      refetch();
-    }
+    if (result) refetch();
+
   };
 
   const handleDelete = async (id) => {
     if (
       window.confirm("Are you sure you want to delete this monthly summary?")
     ) {
-      const result = await del(
-        `/finance/monthly/${id}`,
-        {
-          message: "Summary deleted successfully"
-        });
+      const result = await del(`/finance/summary/${id}`,
+        { message: "Summary deleted successfully" });
       if (result !== null) refetch();
     }
   };

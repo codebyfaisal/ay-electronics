@@ -88,11 +88,8 @@ const Customers = () => {
             "Are you sure you want to delete this customer? This action cannot be undone."
           )
         ) {
-          const result = await del(
-            `/customers/${id}`,
-            {
-              message: "Customer deleted successfully"
-            });
+          const result = await del(`/customers/${id}`,
+            { message: "Customer deleted successfully" });
           if (result !== null) {
             refetch();
           }

@@ -99,9 +99,7 @@ const ProductEdit = () => {
       sellingPrice: Number(editFormData.sellingPrice),
     };
 
-    const result = await put(
-      `/products/${productId}`,
-      data,
+    const result = await put(`/products/${productId}`, data,
       { message: "Product details updated successfully" }
     );
 
@@ -283,10 +281,8 @@ const AddStockForm = ({ productId, onStockAdded }) => {
       direction,
     };
 
-    const result = await post(
-      `/products/${productId}/stocks`,
-      data,
-      { message: "Stock updated successfully" }
+    const result = await post(`/products/${productId}/stocks`,
+      data, { message: "Stock updated successfully" }
     );
 
     if (result) {

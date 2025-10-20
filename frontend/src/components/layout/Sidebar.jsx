@@ -67,7 +67,7 @@ const Sidebar = () => {
         </button>
         <button
           onClick={logout}
-          className={`${commonClasses} ${inactiveClasses} text-[rgb(var(--error))]`}
+          className={`${commonClasses} ${inactiveClasses} text-[rgb(var(--error))]cursor-pointer`}
         >
           <LogOut className="w-5 h-5 mr-3" />
           Logout

@@ -29,6 +29,8 @@ const useApi = () => {
           throw new Error('Invalid API method specified.');
       }
 
+      console.log(response);
+
       const message = success.server
         ? response?.data?.data.message
         : success.message;

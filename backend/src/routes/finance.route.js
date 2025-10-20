@@ -1,5 +1,5 @@
 import express from "express";
-import { handleCreateInvestment, handleCreateDailyTransaction, handleCreateMonthlySummary, handleGetInvestments, handleDeleteInvestment, handleGetDailyTransaction, handleUpdateDailyTransaction, handleDeleteDailyTransaction, handleDeleteMonthlySummary, handleGetMonthlySummaries, handleGetMonthlySummary, handleUpdateInvestment } from "../controllers/finance.controller.js";
+import { handleCreateInvestment, handleCreateDailyTransaction, handleCreateSummary, handleGetInvestments, handleDeleteInvestment, handleGetDailyTransaction, handleUpdateDailyTransaction, handleDeleteDailyTransaction, handleDeleteSummary, handleGetSummaries, handleGetSummary, handleUpdateInvestment } from "../controllers/finance.controller.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
 
 const router = express.Router();
@@ -15,10 +15,10 @@ router.post("/daily-transactions", asyncHandler(handleCreateDailyTransaction));
 router.put("/daily-transactions/:id", asyncHandler(handleUpdateDailyTransaction));
 router.delete("/daily-transactions/:id", asyncHandler(handleDeleteDailyTransaction));
 
-router.get("/summary", asyncHandler(handleGetMonthlySummary));
+router.get("/dashboard", asyncHandler(handleGetSummary));
+router.get("/summary", asyncHandler(handleGetSummaries));
+router.post("/summary", asyncHandler(handleCreateSummary));
+router.delete("/summary/:id", asyncHandler(handleDeleteSummary));
 
-router.get("/monthly", asyncHandler(handleGetMonthlySummaries));
-router.post("/monthly", asyncHandler(handleCreateMonthlySummary));
-router.delete("/monthly/:id", asyncHandler(handleDeleteMonthlySummary));
 
 export default router;

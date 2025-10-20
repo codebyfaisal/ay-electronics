@@ -38,17 +38,7 @@ export const updateDailyTransactionSchema = z.object({
     date: z.coerce.date().optional(),
 });
 
-export const createMonthlySummarySchema = z.object({
-    month: z.coerce
-        .number({ error: "Month is required" })
-        .min(1, "Month must be between 1 and 12")
-        .max(12, "Month must be between 1 and 12"),
-    year: z.coerce
-        .number({ error: "Year is required" })
-        .max(new Date().getFullYear(), "Year cannot be in the future"),
-});
-
-export const getSummaryByMonthSchema = z.object({
+export const getSummarySchema = z.object({
     startM: z.coerce
         .number({ error: "Start Month is required and must be between 1 and 12" })
         .min(1, "Start Month must be between 1 and 12")

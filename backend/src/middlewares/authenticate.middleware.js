@@ -2,15 +2,24 @@ import { getToken } from "../store/session.store.js";
 import { errorRes } from "../utils/response.util.js";
 
 const authenticate = (req, res, next) => {
-    if (!req.headers.authorization.startsWith("Bearer"))
-        return errorRes(res, 401, "Unauthorized");
+    const token = req?.cookies?.token;
+    const verifyToken = getToken(token)
 
-    const token = req.headers.authorization.split(" ")[1];
+    if (req.url === "/auth/login") {
+        if (req.method === "GET")
+            if (verifyToken) return res.redirect("/");
+            else return next()
 
-    // if (!getToken(token))
-    //     return errorRes(res, 401, "Unauthorized");
+        if (req.method === "POST")
+            return next()
+    }
 
-    next();
+    if ((req.url === "/login" && req.method === "GET") || !verifyToken)
+        return res.redirect("/auth/login");
+    
+    if (verifyToken) return next();
+
+    return errorRes(res, 401, false, "Unauthorized");
 }
 
 export default authenticate

@@ -45,7 +45,6 @@ export const getManyHandler = (serviceFn, resourceName) => {
 
 export const getSummaryHandler = (schema, serviceFn, resourceName) => {
     return async (req, res, next) => {
-        console.log(req.query, 344);
         const parseResult = schema.safeParse(req.query);
 
         if (!parseResult.success)
@@ -62,9 +61,7 @@ export const getSummaryHandler = (schema, serviceFn, resourceName) => {
 
 export const createHandler = (schema, serviceFn, resourceName) => {
     return async (req, res, next) => {
-        console.log(req.body);
         const parseResult = schema.safeParse({ ...req.body, ...req.params });
-
         if (!parseResult.success)
             return next(new AppError(zodError(parseResult), 400));
 
@@ -93,7 +90,6 @@ export const updateHandler = (schema, serviceFn, resourceName) => {
             return next(new AppError(zodError(parseResult), 400));
 
         const [error, result] = await catchError(serviceFn(parseResult.data, next));
-        console.log(error, 222);
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             switch (error.code) {
                 case "P2025":

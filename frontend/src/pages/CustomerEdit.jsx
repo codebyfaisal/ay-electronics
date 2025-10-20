@@ -98,10 +98,8 @@ const CustomerEdit = () => {
       ...trimmedData,
     };
 
-    const result = await put(
-      `/customers/${customerId}`,
-      payload,
-      { message: "Customer updated successfully" }
+    const result = await put(`/customers/${customerId}`,
+      payload, { message: "Customer updated successfully" }
     );
 
     if (result) {

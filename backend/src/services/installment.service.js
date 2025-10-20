@@ -83,6 +83,22 @@ export const payInstallment = async ({ id: saleId, paidDate, amount }, next) => 
             data: { status: "LATE" },
         });
 
+        if (status === "COMPLETED") {
+            await tx.installment.updateMany({
+                where: {
+                    saleId, status: "PENDING",
+                    NOT: {
+                        id: installmentToPay.id
+                    }
+                },
+                data: {
+                    amount: 0,
+                    status: "PAID",
+                    paidDate
+                },
+            })
+        }
+
         await tx.dailyTransaction.create({
             data: {
                 type: 'CASH',
@@ -142,6 +158,34 @@ export const updateInstallment = async ({ id, amount, paidDate }, next) => {
             where: { id },
             data: { amount: amount, paidDate: paidDate },
         });
+
+        if (status === "COMPLETED") {
+            await tx.installment.updateMany({
+                where: { saleId: sale.id, status: "PENDING" },
+                data: {
+                    amount: 0,
+                    status: "PAID",
+                    paidDate
+                },
+            })
+        } else {
+            const installments = await tx.installment.findMany({
+                where: { saleId: sale.id, status: "PAID", amount: 0 },
+                orderBy: { dueDate: "asc" },
+                select: {
+                    amount: true, dueDate: true,
+                },
+            })
+            for (let i = 0; i < installments.length; i++) {
+                await tx.installment.updateMany({
+                    where: { saleId: sale.id, status: "PAID", amount: 0, dueDate: installments[i].dueDate },
+                    data: {
+                        status: "PENDING",
+                        paidDate: null,
+                    },
+                });
+            }
+        }
 
         return await tx.sale.update({
             where: { id: sale.id },

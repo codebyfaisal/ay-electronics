@@ -49,10 +49,8 @@ const SaleDetail = () => {
       amount: Number(installmentAmount) || undefined,
     };
 
-    const result = await post(
-      `/sales/${saleId}/installments`,
-      data,
-      { message: "Installment paid successfully" }
+    const result = await post(`/sales/${saleId}/installments`,
+      data, { message: "Installment paid successfully" }
     );
     if (result) {
       setInstallmentAmount("");
@@ -73,9 +71,8 @@ const SaleDetail = () => {
       note: returnNote.trim(),
     };
 
-    const result = await put(`/sales/${saleId}/return`, data, {
-      message: "Sale returned successfully",
-    });
+    const result = await put(`/sales/${saleId}/return`, data,
+      { message: "Sale returned successfully" });
 
     if (result) {
       setReturnQuantity("");
@@ -97,8 +94,7 @@ const SaleDetail = () => {
   const handleUpdateInstallment = async (updatedData) => {
     setEditLoading(true);
     try {
-      const result = await put(
-        `/sales/installments/${updatedData.id}`,
+      const result = await put(`/sales/installments/${updatedData.id}`,
         {
           amount: updatedData.amount,
           paidDate: new Date(updatedData.paidDate).toISOString(),
@@ -197,6 +193,7 @@ const SaleDetail = () => {
               <h2 className="text-xl font-semibold mb-3 border-b pb-2">
                 Customer
               </h2>
+              <DetailItem label="ID" value={sale.customer.id} />
               <DetailItem
                 label="Name"
                 value={sale.customer.name}
@@ -236,6 +233,10 @@ const SaleDetail = () => {
                 value={Number(sale.product.sellingPrice).toLocaleString()}
                 currency={true}
               />
+              <DetailItem
+                label="Sold Quantity"
+                value={sale.quantity}
+              />
             </div>
 
             <div>
@@ -247,6 +248,9 @@ const SaleDetail = () => {
                 value={Number(sale.totalAmount).toLocaleString()}
                 currency={true}
               />
+              {sale.downPayment > 0 && (
+                <DetailItem label="Down Payment" value={sale.downPayment} />
+              )}
               <DetailItem
                 label="Paid Amount"
                 value={Number(sale.paidAmount).toLocaleString()}

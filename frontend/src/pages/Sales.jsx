@@ -115,8 +115,7 @@ const Sales = () => {
             "Are you sure you want to delete this sale? This action will reverse stock and cash flow."
           )
         ) {
-          const result = await del(
-            `/sales/${id}`,
+          const result = await del(`/sales/${id}`,
             { message: "Sale deleted, stock and cash flow reversed successfully" }
           );
           if (result !== null) refetch();

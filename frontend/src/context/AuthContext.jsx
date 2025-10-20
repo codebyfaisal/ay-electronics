@@ -1,5 +1,7 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useState, useContext } from 'react';
+import { showInfo } from '../utils/toast';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -17,10 +19,23 @@ export const AuthProvider = ({ children }) => {
         setToken(newToken);
     };
 
-    const logout = () => {
-        sessionStorage.removeItem(AUTH_KEY);
-        setToken(null);
-    };
+    // const logout = () => {
+    //     sessionStorage.removeItem(AUTH_KEY);
+    //     setToken(null);
+    // };
+
+    const logout = async () => {
+        try {
+            const response = await axios.get("/auth/logout");
+            if (response.data.success) {
+                showInfo("Logout successful")
+                window.location.href = "/login";
+            } else throw new Error(response.data.message || "Logout failed");
+        } catch (error) {
+            console.log(error);
+            showInfo(error.message || "Logout failed");
+        }
+    }
 
     return (
         <AuthContext.Provider value={{ isAuthenticated, login, logout, token }}>

@@ -25,7 +25,7 @@ const Login = () => {
     }
 
     try {
-      const response = await apiClient.post("/auth/login", { password });
+      const response = await apiClient.post("/login", { password });
 
       if (response.data.success && response.data.data.token) {
         login(response.data.data.token);
@@ -46,40 +46,42 @@ const Login = () => {
   };
 
   return (
-    <div className="text-center">
-      <h2 className="text-3xl font-bold mb-2 text-[rgb(var(--primary))]">
-        Welcome Back
-      </h2>
-      <p className="mb-8 text-gray-500 dark:text-gray-400">
-        Sign in to continue to the dashboard.
-      </p>
+    <section className="h-full flex justify-center items-center">
+      <div className="text-center max-w-sm">
+        <h2 className="text-3xl font-bold mb-2 text-[rgb(var(--primary))]">
+          Welcome Back
+        </h2>
+        <p className="mb-8 text-gray-500 dark:text-gray-400">
+          Sign in to continue to the dashboard.
+        </p>
 
-      <form onSubmit={handleLogin} className="space-y-6">
-        <Input
-          label="Password"
-          id="password"
-          type="password"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <form onSubmit={handleLogin} className="space-y-6">
+          <Input
+            label="Password"
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-        <Button
-          type="submit"
-          variant="primary"
-          loading={loading}
-          className="w-full text-lg py-3 outline hover:outline-none"
-        >
-          <LogIn className="w-5 h-5 mr-2" />
-          {loading ? "Logging In..." : "Login"}
-        </Button>
-      </form>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={loading}
+            className="w-full text-lg py-3 outline hover:outline-none"
+          >
+            <LogIn className="w-5 h-5 mr-2" />
+            {loading ? "Logging In..." : "Login"}
+          </Button>
+        </form>
 
-      <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
-        Contact administration if you forgot your password.
-      </p>
-    </div>
+        <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+          Contact administration if you forgot your password.
+        </p>
+      </div>
+    </section>
   );
 };
 

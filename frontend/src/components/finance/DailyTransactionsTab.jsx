@@ -125,11 +125,8 @@ const DailyTransactionsTab = () => {
     if (
       window.confirm("Are you sure you want to delete this daily transaction?")
     ) {
-      const result = await del(
-        `/finance/daily-transactions/${id}`,
-        {
-          message: "Transaction deleted successfully"
-        }
+      const result = await del(`/finance/daily-transactions/${id}`,
+        { message: "Transaction deleted successfully" }
       );
       if (result !== null) {
         refetch();
@@ -209,9 +206,10 @@ const DailyTransactionsTab = () => {
         render: (row) => Number(row.amount).toLocaleString(),
       },
       { header: "Type", accessor: "type" },
-      { header: "Direction", accessor: "direction",
+      {
+        header: "Direction", accessor: "direction",
         render: (row) => <StatusBadge status={row.direction} />
-       },
+      },
       {
         header: "Date",
         accessor: "date",

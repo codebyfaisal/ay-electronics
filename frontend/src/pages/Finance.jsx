@@ -22,7 +22,7 @@ const Finance = () => {
     return (
         <div className="space-y-6">
             <h1 className="text-3xl font-bold">Financial Management</h1>
-            
+
             <div className="border-b border-[rgb(var(--border))]">
                 <nav className="flex space-x-8 -mb-px">
                     {tabs.map((tab) => (
@@ -34,14 +34,14 @@ const Finance = () => {
                                 ${activeTab === tab.id ? activeTabClasses : inactiveTabClasses}
                             `}
                         >
-                            <tab.icon className='w-5 h-5 mr-2'/>
+                            <tab.icon className='w-5 h-5 mr-2' />
                             {tab.name}
                         </button>
                     ))}
                 </nav>
             </div>
 
-                <ActiveComponent />
+            <ActiveComponent />
         </div>
     );
 };

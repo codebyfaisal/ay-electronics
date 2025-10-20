@@ -1,37 +1,30 @@
 {
-  "name": "aytraders-pos",
+  "name": "aytraders-system-backend",
   "version": "1.0.0",
-  "description": "Offline POS (Faisal)",
+  "description": "Express and Prisma backend for AY Traders POS system.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js",
-    "build:dist": "npm install --omit=dev && npx prisma generate",
-    "pkg": "pkg index.js -c pkg.config.json"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/codebyfaisal/first-freelance-project.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "module",
-  "bugs": {
-    "url": "https://github.com/codebyfaisal/first-freelance-project/issues"
+  "scripts": {
+    "start": "bun run index.js",
+    "dev": "bun --watch index.js",
+    "build:server-bundle": "npx esbuild index.js --bundle --platform=node --target=node18 --minify --allow-overwrite --external:express --external:@prisma/client --outfile=dist/server.cjs",
+    "build:frontend": "cd .. && npm run build:frontend",
+    "build:full": "bun run build:frontend && bun run build:server-bundle",
+    "build:exe": "bun run build:server-bundle && pkg . --targets node18-win-x64 --output ../POS-System-Server.exe",
+    "build:bun-exe": "bun build ./index.js --compile --target bun-windows-x64 --outfile ../POS-System-Server-Bun.exe --minify"
   },
-  "homepage": "https://github.com/codebyfaisal/first-freelance-project#readme",
   "dependencies": {
-    "@prisma/client": "^6.16.2",
-    "cors": "^2.8.5",
-    "dayjs": "^1.11.18",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "zod": "^4.1.11"
+    "@prisma/client": "^6.17.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "2.8.5",
+    "dayjs": "1.11.18",
+    "dotenv": "17.2.3",
+    "express": "5.1.0",
+    "zod": "4.1.12"
   },
   "devDependencies": {
-    "esbuild": "^0.25.11",
-    "nodemon": "^3.1.4",
-    "prisma": "^6.17.0"
+    "esbuild": "0.25.11",
+    "nodemon": "3.1.10",
+    "prisma": "^6.17.1"
   }
 }

@@ -166,15 +166,15 @@
 
 import prisma from "../db/prisma.js";
 
-function makeWhereCaseInsensitive(where) {
+function addContainsToWhere(where) {
     if (typeof where !== 'object' || where === null) return where;
 
     const updated = Array.isArray(where) ? [] : {};
 
     for (const [key, value] of Object.entries(where)) {
         if (typeof value === 'string' || typeof value === 'number')
-            updated[key] = { contains: value, mode: 'insensitive' };
-        else updated[key] = makeWhereCaseInsensitive(value);
+            updated[key] = { contains: value };
+        else updated[key] = addContainsToWhere(value);
     }
 
     return updated;
@@ -182,9 +182,9 @@ function makeWhereCaseInsensitive(where) {
 
 export const getProducts = async (where, { page, limit }) => {
     return await prisma.$transaction(async (tx) => {
-        const whereInsensitive = makeWhereCaseInsensitive(where)
+        const wheres = addContainsToWhere(where)
         const products = await tx.product.findMany({
-            where: whereInsensitive,
+            where: wheres,
             skip: (page - 1) * limit,
             take: limit,
             include: {
@@ -202,7 +202,7 @@ export const getProducts = async (where, { page, limit }) => {
         })
 
         const total = await tx.product.count({
-            where: whereInsensitive, // FIX: Use whereInsensitive for total count
+            where: {},
         });
 
         return {
@@ -245,7 +245,7 @@ export const getProductDetails = async (id) => {
 
     const totalPurchasedQty = purchaseTx.reduce((sum, tx) => sum + tx.quantity, 0);
     // Calculation remains correct: Quantity * Unit Price
-    const totalPurchaseCost = totalPurchasedQty * Number(product.buyingPrice); 
+    const totalPurchaseCost = totalPurchasedQty * Number(product.buyingPrice);
     const productReturns = returnInTx.reduce((sum, tx) => sum + tx.quantity, 0);
     const supplierReturns = returnOutTx.reduce((sum, tx) => sum + tx.quantity, 0);
     const expectedStockValue = product.stockQuantity * Number(product.sellingPrice);
@@ -316,7 +316,7 @@ export const createProduct = async (data, next) => {
             await tx.dailyTransaction.create({
                 data: {
                     // Assuming cost of inventory is recorded as EXPENSE/CASH OUTFLOW
-                    type: "EXPENSE", 
+                    type: "EXPENSE",
                     amount: totalCost, // Use the calculated total cost
                     direction: "OUT", // Money leaves the business
                     date,

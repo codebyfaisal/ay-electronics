@@ -83,9 +83,7 @@ const ProductNew = () => {
       date: new Date(formData.date).toISOString(),
     };
 
-    const result = await post(
-      "/products",
-      data,
+    const result = await post("/products", data,
       { message: "Product created successfully" }
     );
 

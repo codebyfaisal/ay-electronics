@@ -52,9 +52,8 @@ const Products = () => {
             "Are you sure you want to delete this product? This will remove all associated stock transactions and sales may become inconsistent."
           )
         ) {
-          const result = await del(
-            `/products/${id}`,
-            "Product deleted successfully"
+          const result = await del(`/products/${id}`,
+            { message: "Product deleted successfully" }
           );
           if (result !== null) {
             refetch();

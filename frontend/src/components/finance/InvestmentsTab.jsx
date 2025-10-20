@@ -60,14 +60,11 @@ const InvestmentsTab = () => {
 
     let result;
     if (isNew) {
-      result = await post(
-        "/finance/investments",
-        payload,
-        "Investment added successfully"
+      result = await post("/finance/investments", payload,
+        { message: "Investment added successfully" }
       );
     } else {
-      result = await put(
-        `/finance/investments/${data.id}`,
+      result = await put(`/finance/investments/${data.id}`,
         payload,
         { message: "Investment updated successfully" }
       );
@@ -118,8 +115,7 @@ const InvestmentsTab = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this investment?")) {
-      const result = await del(
-        `/finance/investments/${id}`,
+      const result = await del(`/finance/investments/${id}`,
         { message: "Investment deleted successfully" }
       );
       if (result !== null) refetch();

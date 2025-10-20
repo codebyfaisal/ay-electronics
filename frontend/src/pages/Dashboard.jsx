@@ -35,6 +35,7 @@ import {
   Title,
 } from "chart.js";
 import { Pie, Line } from "react-chartjs-2";
+import useApi from "../utils/useApi";
 
 ChartJS.register(
   ArcElement,
@@ -212,7 +213,6 @@ const FinancialMixChart = ({ totalSales, totalExpense, totalDebt }) => {
 };
 
 const Dashboard = () => {
-
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [filters, setFilters] = useState({
@@ -227,9 +227,8 @@ const Dashboard = () => {
     startYear: currentYear,
   });
 
-
   const apiUrl = useMemo(() => {
-    let url = `/finance/summary?startM=${appliedFilters.startMonth}&startY=${appliedFilters.startYear}`;
+    let url = `/finance/dashboard?startM=${appliedFilters.startMonth}&startY=${appliedFilters.startYear}`;
 
     if (appliedFilters.endMonth && appliedFilters.endYear) {
       url += `&endM=${appliedFilters.endMonth}&endY=${appliedFilters.endYear}`;
@@ -287,8 +286,14 @@ const Dashboard = () => {
 
   const allKpis = useMemo(() => {
     const data = summaryData;
-
     return [
+      {
+        title: "Total Investment",
+        value: formatCurrency(data?.totalInvestment),
+        icon: ListChecks,
+        color: "text-purple-500",
+        currency: true,
+      },
       {
         title: "Net Profit",
         value: formatCurrency(data?.netProfit),
@@ -296,11 +301,18 @@ const Dashboard = () => {
         color: "text-[rgb(var(--primary))]",
         currency: true,
       },
+      // {
+      //   title: "Gross Profit",
+      //   value: formatCurrency(data?.grossProfit),
+      //   icon: DollarSign,
+      //   color: "text-blue-500",
+      //   currency: true,
+      // },
       {
-        title: "Gross Profit",
-        value: formatCurrency(data?.grossProfit),
-        icon: DollarSign,
-        color: "text-blue-500",
+        title: "Total Customer Debt",
+        value: formatCurrency(Number(data?.totalCustomerDebt)),
+        icon: BarChart,
+        color: "text-cyan-500",
         currency: true,
       },
       {
@@ -308,13 +320,6 @@ const Dashboard = () => {
         value: formatCurrency(data?.totalSales),
         icon: BarChart,
         color: "text-cyan-500",
-        currency: true,
-      },
-      {
-        title: "Total Investment",
-        value: formatCurrency(data?.totalInvestment),
-        icon: ListChecks,
-        color: "text-purple-500",
         currency: true,
       },
       {
@@ -346,17 +351,17 @@ const Dashboard = () => {
         currency: true,
       },
       {
-        title: "Current Stock Value",
-        value: formatCurrency(data?.stockValue),
-        icon: Package,
-        color: "text-yellow-500",
-        currency: true,
-      },
-      {
         title: "Cost of Stock Sold (COGS)",
         value: formatCurrency(data?.costOfStock),
         icon: DollarSign,
         color: "text-orange-500",
+        currency: true,
+      },
+      {
+        title: "Current Stock Value",
+        value: formatCurrency(data?.stockValue),
+        icon: Package,
+        color: "text-yellow-500",
         currency: true,
       },
       {
@@ -394,7 +399,7 @@ const Dashboard = () => {
     return `Report for ${fromMonthName} ${fromYear}`;
   })();
 
-  if (loading && !summaryData) {
+  if ((loading && !summaryData)) {
     return (
       <div className="size-full flex items-center justify-center">
         <Spinner overlay={false} />
@@ -411,15 +416,15 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <>
+      <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Dashboard</h1>
 
         <h2 className="text-2xl font-bold">{periodDisplay}</h2>
         <Button variant="primary" onClick={() => setIsFilterOpen(true)}>
           <Filter className="w-5 h-5 mr-2" /> Filter Report
         </Button>
-      </div>
+      </header>
 
       <FilterSidebar
         isOpen={isFilterOpen}
@@ -430,37 +435,67 @@ const Dashboard = () => {
       />
 
       {summaryData ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
-            {allKpis.map((kpi, index) => (
-              <MetricCard
-                key={index}
-                title={kpi.title}
-                value={kpi.value}
-                icon={kpi.icon}
-                colorClass={kpi.color}
-                currency={kpi.currency}
-              />
-            ))}
-          </div>
+        <>
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+              {allKpis.slice(0, 4).map((kpi, index) => (
+                <MetricCard
+                  key={index}
+                  title={kpi.title}
+                  value={kpi.value}
+                  icon={kpi.icon}
+                  colorClass={kpi.color}
+                  currency={kpi.currency}
+                />
+              ))}
+            </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <h1 className="col-span-full text-xl opacity-50 mt-2 mb-1">Cash</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+              {allKpis.slice(4, 8).map((kpi, index) => (
+                <MetricCard
+                  key={index}
+                  title={kpi.title}
+                  value={kpi.value}
+                  icon={kpi.icon}
+                  colorClass={kpi.color}
+                  currency={kpi.currency}
+                />
+              ))}
+            </div>
+
+            <h1 className="col-span-full text-xl opacity-50 mt-2 mb-1">Inventory</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+              {allKpis.slice(8).map((kpi, index) => (
+                <MetricCard
+                  key={index}
+                  title={kpi.title}
+                  value={kpi.value}
+                  icon={kpi.icon}
+                  colorClass={kpi.color}
+                  currency={kpi.currency}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
             <MonthlyProfitChart summaryData={summaryData} />
             <FinancialMixChart
               totalSales={summaryData.totalSales}
               totalExpense={summaryData.totalExpense}
               totalDebt={summaryData.totalDebt}
             />
-          </div>
-        </div>
+          </section>
+        </>
       ) : (
-        <div className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))]">
+        <section className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] space-y-3">
           <p className="text-gray-500">
             No summary data available for the selected period.
           </p>
-        </div>
+        </section>
       )}
-    </div>
+    </>
   );
 };
 

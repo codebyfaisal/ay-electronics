@@ -71,12 +71,8 @@ const CustomerNew = () => {
       return;
     }
 
-    const result = await post(
-      "/customers",
-      trimmedData,
-      {
-        message: "Customer created successfully"
-      });
+    const result = await post("/customers", trimmedData,
+      { message: "Customer created successfully" });
 
     if (result) navigate(`/customers`);
   };

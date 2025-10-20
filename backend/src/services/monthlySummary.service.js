@@ -1,14 +1,23 @@
-// src/services/monthlySummary.service.js
 import prisma from "../db/prisma.js";
 import dayjs from "dayjs";
-import AppError from "../utils/error.util.js";
+import isBetween from 'dayjs/plugin/isBetween.js';
+import minMax from 'dayjs/plugin/minMax.js';
 import pkg from "@prisma/client";
+
+// EXTEND dayjs to enable the new functions (min/max and isBetween)
+dayjs.extend(isBetween);
+dayjs.extend(minMax);
 
 const { Decimal } = pkg;
 
-const createSummaryInternal = async (tx, data) => {
-    const { month, year } = data;
+// ===========================================
+// INTERNAL HELPERS
+// ===========================================
 
+/**
+ * INTERNAL: Aggregates all financial data strictly as MONTHLY FLOWS/CHANGES.
+ */
+const createSummary = async (tx, { month, year }) => {
     const start = dayjs(`${year}-${month}-01`).startOf("month").toDate();
     const end = dayjs(`${year}-${month}-01`).endOf("month").toDate();
 
@@ -16,106 +25,168 @@ const createSummaryInternal = async (tx, data) => {
         where: { year_month: { year, month } },
     });
 
+    const summaryData = {
+        month, year,
+        totalExpense: new Decimal(0), totalDebt: new Decimal(0),
+        totalBank: new Decimal(0), totalCash: new Decimal(0), // These are NET MONTHLY CHANGES
+        totalSales: new Decimal(0), costOfStock: new Decimal(0),
+        grossProfit: new Decimal(0), netProfit: new Decimal(0),
+        stockValue: new Decimal(0), totalInvestment: new Decimal(0), // These are MONTHLY FLOWS
+    };
+
     // 1. Daily Transaction Aggregation
-    // FIX: Group by BOTH 'type' AND 'direction' to calculate balance correctly
     const dailyTransactions = await tx.dailyTransaction.findMany({
         where: { date: { gte: start, lte: end } },
-        select: {
-            type: true,
-            amount: true,
-            direction: true,
-        },
+        select: { type: true, amount: true, direction: true, },
     });
 
-    // 2. Initialize Summary Data
-    const summaryData = {
-        month,
-        year,
-        totalExpense: new Decimal(0),
-        totalDebt: new Decimal(0),
-        totalBank: new Decimal(0),
-        totalCash: new Decimal(0),
-        totalSales: new Decimal(0),
-        costOfStock: new Decimal(0),
-        grossProfit: new Decimal(0),
-        netProfit: new Decimal(0),
-        stockValue: new Decimal(0),
-        totalInvestment: new Decimal(0),
-    };
-    
-    // 3. Process Daily Transactions based on Type and Direction
+    // 3. Process Daily Transactions (Calculates NET change for Cash/Bank)
     dailyTransactions.forEach((t) => {
         const amount = new Decimal(t.amount);
-        const sign = t.direction === "IN" ? amount : amount.neg(); // Positive for IN, Negative for OUT
+        const sign = t.direction === "IN" ? amount : amount.neg();
 
-        // A. Simple OUTFLOWS (Always negative or positive sum of outflows)
         if (t.type === "EXPENSE" && t.direction === "OUT") {
-            summaryData.totalExpense = summaryData.totalExpense.plus(amount); // Sum of expenses (as costs)
+            summaryData.totalExpense = summaryData.totalExpense.plus(amount);
         } else if (t.type === "DEBT" && t.direction === "OUT") {
-            summaryData.totalDebt = summaryData.totalDebt.plus(amount); // Sum of debt (as costs)
-        } 
-        // B. Managed ACCOUNTS (Balance calculation)
-        else if (t.type === "BANK") {
-            summaryData.totalBank = summaryData.totalBank.plus(sign); // Apply sign for Bank balance
+            summaryData.totalDebt = summaryData.totalDebt.plus(amount);
+        } else if (t.type === "BANK") {
+            summaryData.totalBank = summaryData.totalBank.plus(sign); // Net Change
         } else if (t.type === "CASH") {
-            summaryData.totalCash = summaryData.totalCash.plus(sign); // Apply sign for Cash balance
+            summaryData.totalCash = summaryData.totalCash.plus(sign); // Net Change
         }
     });
 
-    // 4. Sale Summary (Total Sales Revenue)
-    const saleSummary = await tx.sale.aggregate({
-        _sum: { totalAmount: true },
-        where: { saleDate: { gte: start, lte: end } },
-    });
+    // 4 & 5. Sales and COGS (Flow metrics - correct)
+    const saleSummary = await tx.sale.aggregate({ _sum: { totalAmount: true }, where: { saleDate: { gte: start, lte: end } }, });
     summaryData.totalSales = new Decimal(saleSummary._sum.totalAmount || 0);
 
-    // 5. Cost of Stock Sold (COGS)
-    const soldStock = await tx.stockTransaction.findMany({
-        where: { type: "SALE", date: { gte: start, lte: end } },
-        include: { product: true },
-    });
-    
-    summaryData.costOfStock = soldStock.reduce(
-        (sum, s) => sum.plus(new Decimal(s.quantity).mul(s.product.buyingPrice)),
-        new Decimal(0)
-    );
+    const soldStock = await tx.stockTransaction.findMany({ where: { type: "SALE", date: { gte: start, lte: end } }, include: { product: true }, });
+    summaryData.costOfStock = soldStock.reduce((sum, s) => sum.plus(new Decimal(s.quantity).mul(s.product.buyingPrice)), new Decimal(0));
 
-    // 6. Profit Calculation (Using Decimal methods)
+    // 6. Profit Calculation (Flow metrics - correct)
     summaryData.grossProfit = summaryData.totalSales.sub(summaryData.costOfStock);
-    summaryData.netProfit = summaryData.grossProfit
-        .sub(summaryData.totalExpense) // Expenses are costs
-        .sub(summaryData.totalDebt); // Debt payments are costs (though usually handled separately from expense in P&L)
+    summaryData.netProfit = summaryData.grossProfit.sub(summaryData.totalExpense).sub(summaryData.totalDebt);
 
-    // 7. Available Stock Value
-    const availableStock = await tx.product.findMany(); 
-    summaryData.stockValue = availableStock.reduce(
-        (sum, p) => sum.plus(new Decimal(p.stockQuantity).mul(p.buyingPrice)),
-        new Decimal(0)
-    );
 
-    // 8. Total Investment
-    const investment = await tx.investment.aggregate({ 
+    // 7. Available Stock Value (CRITICAL: THIS IS NOW A LIVE SNAPSHOT)
+    // NOTE: This must remain a live snapshot for the dashboard 'Current Stock Value' card.
+    const availableStock = await tx.product.findMany();
+    summaryData.stockValue = availableStock.reduce((sum, p) => sum.plus(new Decimal(p.stockQuantity).mul(p.buyingPrice)), new Decimal(0));
+
+    // 8. Total Investment (FLOW: Only count investments made within this month)
+    const investment = await tx.investment.aggregate({
         _sum: { investment: true },
+        where: {
+            date: { gte: start, lte: end } // Filters to monthly flow
+        }
     });
     summaryData.totalInvestment = new Decimal(investment._sum.investment || 0);
 
+    const saleKpiSummary = await tx.sale.aggregate({
+        _sum: {
+            totalAmount: true, // Total Sale Revenue (Accrual)
+            paidAmount: true, // Total Payments Received
+            remainingAmount: true, // Total Remaining Debt/Receivable
+        },
+        where: {
+            saleDate: { gte: start, lte: end }
+        },
+    });
+
+    
     // 9. Upsert and Return
     const saved = await tx.monthlySummary.upsert({
         where: { year_month: { year, month } },
         update: summaryData,
         create: summaryData,
     });
+    
+    saved.totalCustomerDebt = new Decimal(saleKpiSummary._sum.remainingAmount || 0);
 
-    let message = `Monthly summary for ${dayjs(saved.date).format("MMM")} ${dayjs(saved.date).format("YYYY")} Created successfully.`;
-    if (existingSummary) message = `Monthly summary for ${dayjs(existingSummary.date).format("MMM")} ${dayjs(existingSummary.date).format("YYYY")} updated successfully.`;
-    saved.message = message;
-
+    saved.message = existingSummary
+        ? `Monthly summary for ${dayjs(existingSummary.date).format("MMM YYYY")} updated successfully.`
+        : `Monthly summary for ${dayjs(saved.date).format("MMM YYYY")} Created successfully.`;
     return saved;
 };
 
-// ---------------------------------------------------------------------------------
+/**
+ * INTERNAL: Aggregates multiple monthly summaries by SUMMING ALL FLOW METRICS.
+ */
+const createDashboardSummary = async (summariesArray, tx) => {
+    if (summariesArray.length === 0) return null;
 
-export const getMonthlySummaries = async (where, { page, limit }) => {
+    const formatTrendData = (summaries) =>
+        summaries.map((s) => ({
+            month: s.month, year: s.year,
+            grossProfit: new Decimal(s.grossProfit || 0).toString(),
+            netProfit: new Decimal(s.netProfit || 0).toString(),
+            totalSales: new Decimal(s.totalSales || 0).toString(),
+        }));
+
+    const trendData = formatTrendData(summariesArray);
+
+    let aggregated = {
+        totalExpense: new Decimal(0), totalDebt: new Decimal(0),
+        totalBank: new Decimal(0), totalCash: new Decimal(0),
+        totalSales: new Decimal(0), costOfStock: new Decimal(0),
+        grossProfit: new Decimal(0), netProfit: new Decimal(0),
+        totalInvestment: new Decimal(0),
+        stockValue: new Decimal(0),
+        trendData,
+        totalCustomerDebt: new Decimal(0),
+    };
+
+    const financialKeys = Object.keys(aggregated).filter(key => aggregated[key] instanceof Decimal);
+
+    // 1. SUM ALL FLOW/NET CHANGE METRICS (including Cash/Bank/Investment)
+    summariesArray.forEach((s) => {
+        financialKeys.forEach((key) => {
+            if (key in s && (typeof s[key] === 'number' || s[key] instanceof Decimal)) {
+                const incomingValue = new Decimal(s[key]);
+                aggregated[key] = aggregated[key].plus(incomingValue);
+            }
+        });
+    });
+
+    // 2. STOCK VALUE EXCEPTION: Overwrite only Stock Value as a live snapshot.
+    // Use the value from the last month for the 'Current Stock Value' card.
+    const lastSummary = summariesArray[summariesArray.length - 1];
+    aggregated.stockValue = new Decimal(lastSummary.stockValue || 0);
+
+
+    // 3. Fetch Live Totals (Stock Quantity and Customers)
+    const totalStock = await tx.product.aggregate({ _sum: { stockQuantity: true } });
+    const totalCustomers = await tx.customer.count();
+
+    // 4. Convert all final Decimals to Strings
+    for (const key of financialKeys) {
+        if (aggregated[key] instanceof Decimal) {
+            aggregated[key] = aggregated[key].toString();
+        }
+    }
+
+    // 5. Add Live Totals and metadata
+    aggregated.totalStockValue = totalStock._sum.stockQuantity || 0;
+    aggregated.totalCustomers = totalCustomers;
+    aggregated.months = summariesArray.length;
+    aggregated.from = { month: summariesArray[0].month, year: summariesArray[0].year };
+    if (summariesArray.length > 1)
+        aggregated.to = { month: lastSummary.month, year: lastSummary.year };
+
+    return aggregated;
+};
+
+// ===========================================
+// EXPORTED SERVICES
+// ===========================================
+
+export const generateSummary = async (data, next) => {
+    return await prisma.$transaction((tx) =>
+        createSummary(tx, { month: data.startM, year: data.startY })
+    );
+}
+
+export const getSummaries = async (where, { page, limit }) => {
     return await prisma.$transaction(async (tx) => {
         const monthlySummaries = await tx.monthlySummary.findMany({
             where,
@@ -129,140 +200,44 @@ export const getMonthlySummaries = async (where, { page, limit }) => {
     });
 };
 
-// ---------------------------------------------------------------------------------
-
-export const getSummaryByMonth = async ({ startM, startY, endM, endY }, next) => {
-    const dateKey = (y, m) => y * 100 + m;
-
-    const formatTrendData = (summaries) =>
-        summaries.map((s) => ({
-            month: s.month,
-            year: s.year,
-            grossProfit: s.grossProfit.toString(),
-            netProfit: s.netProfit.toString(),
-            totalSales: s.totalSales.toString(),
-        }));
-
+/**
+ * 3. Public service to GENERATE/FETCH the aggregated Dashboard Report for a single month or range.
+ */
+export const generateDashboardSummary = async (data, next) => {
     return await prisma.$transaction(async (tx) => {
-        let initialSummary = null;
+        const { startM, startY, endM, endY } = data;
+        const summaries = [];
 
-        // --- Case 1: Single Month ---
-        if (!endM || !endY) {
-            initialSummary = await tx.monthlySummary.findUnique({
-                where: { year_month: { year: startY, month: startM } },
-            });
+        // 1. Define Boundaries and Correct Order 
+        const start = dayjs(`${startY}-${startM}-01`);
+        const end = (endY && endM) ? dayjs(`${endY}-${endM}-01`) : start;
 
-            if (!initialSummary) {
-                initialSummary = await createSummaryInternal(tx, { month: startM, year: startY });
-                if (!initialSummary) return next(new AppError("Failed to generate summary.", 500));
-            }
+        const finalStart = dayjs.min(start, end);
+        const finalEnd = dayjs.max(start, end);
 
-            const totalStock = await tx.product.aggregate({ _sum: { stockQuantity: true } });
-            const totalCustomers = await tx.customer.count();
+        // 2. Iterate Month by Month
+        let currentDate = finalStart;
 
-            const singleMonthArray = [initialSummary];
+        while (currentDate.isSame(finalEnd, 'month') || currentDate.isBefore(finalEnd, 'month')) {
+            const year = currentDate.year();
+            const month = currentDate.month() + 1;
 
-            const summary = {
-                ...initialSummary,
-                trendData: formatTrendData(singleMonthArray),
-                totalStockValue: totalStock._sum.stockQuantity || 0,
-                totalCustomers,
-                months: 1,
-                from: { year: startY, month: startM },
-            };
+            // Generate or update the summary for the current month
+            const summary = await createSummary(tx, { month, year });
+            summaries.push(summary);
 
-            // Convert Decimal fields to strings for frontend compatibility
-            for (const key in summary) {
-                if (
-                    summary[key] &&
-                    typeof summary[key].toString === "function" &&
-                    !Array.isArray(summary[key]) &&
-                    typeof summary[key] !== "object"
-                ) {
-                    summary[key] = summary[key].toString();
-                }
-            }
-
-            delete summary.id;
-            delete summary.month;
-            delete summary.year;
-
-            return summary;
+            currentDate = currentDate.add(1, 'month');
         }
 
-        // --- Case 2: Range of Months ---
-        const summaries = await tx.monthlySummary.findMany({
-            where: {
-                OR: [
-                    { year: startY, month: { gte: startM } },
-                    { year: endY, month: { lte: endM } },
-                ],
-            },
-            orderBy: [{ year: "asc" }, { month: "asc" }],
-        });
+        if (summaries.length === 0) return null;
 
-        const startKey = dateKey(startY, startM);
-        const endKey = dateKey(endY, endM);
-        const filtered = summaries.filter((s) => {
-            const currentKey = dateKey(s.year, s.month);
-            return currentKey >= startKey && currentKey <= endKey;
-        });
+        console.log({ summaries });
 
-        if (filtered.length === 0) return null;
-
-        const trendData = formatTrendData(filtered);
-
-        // Aggregate Decimals from filtered summaries
-        let aggregated = {
-            totalExpense: new Decimal(0),
-            totalDebt: new Decimal(0),
-            totalBank: new Decimal(0),
-            totalCash: new Decimal(0),
-            totalSales: new Decimal(0),
-            costOfStock: new Decimal(0),
-            grossProfit: new Decimal(0),
-            netProfit: new Decimal(0),
-            totalInvestment: new Decimal(0),
-            stockValue: new Decimal(0), // Handled outside the loop
-            
-            months: filtered.length,
-            from: { month: startM, year: startY },
-            to: { month: endM, year: endY },
-            trendData,
-        };
-
-        filtered.forEach((s) => {
-            for (const key in aggregated) {
-                // Aggregation applies to fields present in the MonthlySummary model
-                if (key in s && typeof s[key]?.toNumber === "function") {
-                    aggregated[key] = aggregated[key].plus(s[key].toNumber());
-                }
-            }
-        });
-
-        // Convert final aggregated Decimal metrics to strings
-        for (const key in aggregated) {
-            if (typeof aggregated[key]?.toString === "function" && aggregated[key] instanceof Decimal) {
-                aggregated[key] = aggregated[key].toString();
-            }
-        }
-        
-        // Final non-time-series aggregations (needs to be outside the Decimal loop)
-        const totalStock = await tx.product.aggregate({ _sum: { stockQuantity: true } });
-        const totalCustomers = await tx.customer.count();
-
-        // Stock value is a single sum, and should be added as a string/number after Decimal conversion
-        aggregated.totalStockValue = totalStock._sum.stockQuantity || 0;
-        aggregated.totalCustomers = totalCustomers;
-
-        return aggregated;
+        const dashboard = await createDashboardSummary(summaries, tx);
+        return dashboard;
     });
 };
 
-// ---------------------------------------------------------------------------------
-
-export const createMonthlySummary = async (data, next) =>
-    await prisma.$transaction((tx) => createSummaryInternal(tx, data));
-
-export const deleteMonthlySummary = async (id) =>
-    await prisma.monthlySummary.delete({ where: { id } });
+export const deleteSummary = async (id) => {
+    return await prisma.monthlySummary.delete({ where: { id } });
+}
