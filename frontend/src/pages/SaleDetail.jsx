@@ -10,7 +10,6 @@ import { ArrowLeft, DollarSign, CreditCard, Edit } from "lucide-react";
 import { showInfo } from "../utils/toast";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import EditModal from "../components/EditModal.jsx";
-import Select from "../components/ui/Select.jsx";
 
 const SaleDetail = () => {
   const { id: saleId } = useParams();
@@ -20,10 +19,11 @@ const SaleDetail = () => {
   const [paidDate, setPaidDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [returnQuantity, setReturnQuantity] = useState("");
-  const [returnNote, setReturnNote] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [refundMethod, setRefundMethod] = useState("CASH");
+  // const [returnQuantity, setReturnQuantity] = useState("");
+  // const [returnNote, setReturnNote] = useState("");
+  // const [returnDate, setReturnDate] = useState("");
+  // const [refundMethod] = useState("CASH");
+  // const [paymentMethod, setPaymentMethod] = useState("CASH");
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [installmentToEdit, setInstallmentToEdit] = useState(null);
@@ -59,27 +59,27 @@ const SaleDetail = () => {
   };
 
   // -------- RETURN SALE HANDLER ----------
-  const handleReturnSale = async (e) => {
-    e.preventDefault();
-    const confirm = window.confirm("Are you sure you want to return this sale?");
-    if (!confirm) return;
+  // const handleReturnSale = async (e) => {
+  //   e.preventDefault();
+  //   const confirm = window.confirm("Are you sure you want to return this sale?");
+  //   if (!confirm) return;
 
-    const data = {
-      quantity: Number(returnQuantity),
-      date: returnDate,
-      refundMethod: refundMethod.toUpperCase(),
-      note: returnNote.trim(),
-    };
+  //   const data = {
+  //     quantity: Number(returnQuantity),
+  //     date: returnDate,
+  //     refundMethod: refundMethod.toUpperCase(),
+  //     note: returnNote.trim(),
+  //   };
 
-    const result = await put(`/sales/${saleId}/return`, data,
-      { message: "Sale returned successfully" });
+  //   const result = await put(`/sales/${saleId}/return`, data,
+  //     { message: "Sale returned successfully" });
 
-    if (result) {
-      setReturnQuantity("");
-      setReturnNote("");
-      refetch();
-    }
-  };
+  //   if (result) {
+  //     setReturnQuantity("");
+  //     setReturnNote("");
+  //     refetch();
+  //   }
+  // };
 
   // -------- EDIT INSTALLMENT HANDLERS ----------
   const handleEditInstallment = (installment) => {
@@ -93,25 +93,25 @@ const SaleDetail = () => {
 
   const handleUpdateInstallment = async (updatedData) => {
     setEditLoading(true);
-    try {
-      const result = await put(`/sales/installments/${updatedData.id}`,
-        {
-          amount: updatedData.amount,
-          paidDate: new Date(updatedData.paidDate).toISOString(),
-        },
-        { message: "Installment updated successfully" }
-      );
+    // try {
+    const result = await put(`/sales/installments/${updatedData.id}`,
+      {
+        amount: updatedData.amount,
+        paidDate: new Date(updatedData.paidDate).toISOString(),
+      },
+      { message: "Installment updated successfully" }
+    );
 
-      if (result) {
-        setIsEditModalOpen(false);
-        setInstallmentToEdit(null);
-        refetch();
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setEditLoading(false);
+    if (result) {
+      setIsEditModalOpen(false);
+      setInstallmentToEdit(null);
+      refetch();
     }
+    // } catch (e) {
+    //   console.error(e);
+    // } finally {
+    setEditLoading(false);
+    // }
   };
 
   const installmentEditFields = [
@@ -218,25 +218,17 @@ const SaleDetail = () => {
                 className="capitalize"
                 onClick={() => navigate(`/products/${sale.product.id}`)}
               />
+              <DetailItem label="Category" value={sale.product.category} className="capitalize" />
+              <DetailItem label="Brand" className="capitalize" value={sale.product.brand} />
               <DetailItem
-                label="Category"
-                value={sale.product.category}
-                className="capitalize"
-              />
-              <DetailItem
-                label="Original Price"
+                label="Original Price" currency={true}
                 value={Number(sale.product.buyingPrice).toLocaleString()}
-                currency={true}
               />
               <DetailItem
-                label="Selling Price"
+                label="Selling Price" currency={true}
                 value={Number(sale.product.sellingPrice).toLocaleString()}
-                currency={true}
               />
-              <DetailItem
-                label="Sold Quantity"
-                value={sale.quantity}
-              />
+              <DetailItem label="Sold Quantity" value={sale.quantity} />
             </div>
 
             <div>
@@ -248,9 +240,8 @@ const SaleDetail = () => {
                 value={Number(sale.totalAmount).toLocaleString()}
                 currency={true}
               />
-              {sale.downPayment > 0 && (
-                <DetailItem label="Down Payment" value={sale.downPayment} />
-              )}
+              <DetailItem label="Down Payment" value={sale.downPayment} />
+              <DetailItem label="Discount" value={sale.discount} />
               <DetailItem
                 label="Paid Amount"
                 value={Number(sale.paidAmount).toLocaleString()}
@@ -266,9 +257,22 @@ const SaleDetail = () => {
             </div>
           </div>
 
+          {/* Product + Payment Info */}
+          {(sale.status === "PARTIAL" || sale.status === "RETURNED") && (
+            <div className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))]">
+              <h2 className="text-xl font-semibold mb-3 border-b pb-2">
+                Return
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                <DetailItem label="Return Quantity" value={sale.returnQuantity} className="text-red-500" />
+                <DetailItem label="Refund Amount" value={sale.returnAmount} />
+              </div>
+            </div>
+          )}
+
           {/* Installment Table */}
           {sale.saleType === "INSTALLMENT" && (
-            <div className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))]">
+            <div className={`bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] ${sale.status === "RETURNED" ? "opacity-70 cursor-not-allowed" : ""}`}>
               <div className="flex justify-between items-center mb-4 border-b pb-2">
                 <h2 className="text-xl font-semibold">Installments</h2>
                 <span className="text-md">
@@ -280,24 +284,16 @@ const SaleDetail = () => {
                 <table className="min-w-full divide-y divide-[rgb(var(--border))]">
                   <thead className="bg-[rgb(var(--bg-secondary))]">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">
-                        S.no.
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">
-                        Amount
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">
-                        Due Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">
-                        Paid Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium uppercase">
-                        Action
-                      </th>
+                      {["S.no.", "Amount", "Due Date", "Paid Date", "Status", "Action"].map(
+                        (h) => (
+                          <th
+                            key={h}
+                            className="px-6 py-3 text-left text-xs font-medium uppercase"
+                          >
+                            {h}
+                          </th>
+                        )
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[rgb(var(--border))]">
@@ -329,7 +325,7 @@ const SaleDetail = () => {
                             variant="ghost"
                             className="text-[rgb(var(--primary))] p-1"
                             onClick={() => handleEditInstallment(i)}
-                            disabled={i.status !== "PAID" || loading}
+                            disabled={i.status !== "PAID" || sale.status === "RETURNED" || loading}
                             loading={i.id === installmentToEdit?.id && editLoading}
                             title={
                               i.status !== "PAID"
@@ -378,11 +374,13 @@ const SaleDetail = () => {
                   value={installmentAmount}
                   onChange={(e) => setInstallmentAmount(e.target.value)}
                   required
-                  disabled={sale.status === "COMPLETED" || loading}
+                  disabled={sale.status === "COMPLETED" || sale.status === "RETURNED" || loading}
                   currency={true}
                   min={0.01}
+                  max={sale?.remainingAmount}
                   step="0.01"
                 />
+
                 <Input
                   label="Paid Date"
                   id="paidDate"
@@ -390,7 +388,7 @@ const SaleDetail = () => {
                   value={paidDate}
                   onChange={(e) => setPaidDate(e.target.value)}
                   required
-                  disabled={sale.status === "COMPLETED" || loading}
+                  disabled={sale.status === "COMPLETED" || sale.status === "RETURNED" || loading}
                 />
 
                 <Button
@@ -398,7 +396,7 @@ const SaleDetail = () => {
                   variant="primary"
                   loading={payLoading}
                   className="w-full"
-                  disabled={sale.status === "COMPLETED" || loading}
+                  disabled={sale.status === "COMPLETED" || sale.status === "RETURNED" || loading}
                 >
                   <DollarSign className="w-5 h-5 mr-2" />
                   {payLoading ? "Processing..." : "Add Installment"}
@@ -407,9 +405,9 @@ const SaleDetail = () => {
             )}
 
             {/* Return Sale Form */}
-            <form
+            {/* <form
               onSubmit={handleReturnSale}
-              className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] sticky top-19.5 space-y-4"
+              className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] sticky top-19.5 space-y-4 hidden"
             >
               <h2 className="text-xl font-semibold mb-4 flex items-center">
                 <DollarSign className="w-5 h-5 mr-2 text-red-500" /> Return Sale
@@ -432,6 +430,7 @@ const SaleDetail = () => {
                 disabled={sale.status === "RETURNED" || loading}
                 min={1}
                 step="1"
+                max={sale.quantity}
               />
 
               <Select
@@ -480,7 +479,7 @@ const SaleDetail = () => {
                 <DollarSign className="w-5 h-5 mr-2" />
                 {payLoading ? "Processing..." : "Submit Return"}
               </Button>
-            </form>
+            </form> */}
           </div>
         </div>
       </div>

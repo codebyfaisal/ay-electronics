@@ -105,11 +105,12 @@ const Customers = () => {
       { header: "Name", accessor: "name", className: "capitalize" },
       { header: "CNIC", accessor: "cnic" },
       { header: "Phone", accessor: "phone" },
+      { header: "Address", accessor: "address" },
       {
         header: "Created At",
         accessor: "createdAt",
         render: (row) => new Date(row.createdAt).toLocaleDateString(),
-      },
+      },      
     ],
     []
   );

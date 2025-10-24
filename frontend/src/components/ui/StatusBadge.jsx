@@ -1,41 +1,39 @@
 const StatusBadge = ({ status }) => {
   let colorClass;
 
-  switch (status) {
-    case "ACTIVE":
-      colorClass = "bg-yellow-500 text-white";
-      break;
+switch (status) {
+  case "ACTIVE":
+    colorClass = "bg-green-900 text-white";
+    break;
 
-    case "PENDING":
-      colorClass = "bg-yellow-300 text-white";
-      break;
+  case "PENDING":
+    colorClass = "bg-yellow-500 text-white";
+    break;
 
-    case "COMPLETED":
-    case "PAID":
-      colorClass = "bg-green-600 text-white";
-      break;
+  case "COMPLETED":
+    colorClass = "bg-green-700 text-white";
+    break;
 
-    case "CANCELLED":
-    case "LATE":
-      colorClass = "bg-red-100 text-white";
-      break;
+  case "PAID":
+    colorClass = "bg-green-500 text-white";
+    break;
 
-    case "RETURNED":
-      colorClass = "bg-red-500 text-white";
-      break;
+  case "LATE":
+    colorClass = "bg-red-500 text-white";
+    break;
 
-    case "IN":
-      colorClass = "text-green-500";
-      break;
+  case "IN":
+    colorClass = "text-green-600";
+    break;
 
-    case "OUT":
-      colorClass = "text-red-500";
-      break;
+  case "OUT":
+    colorClass = "text-red-600";
+    break;
 
-    default:
-      colorClass = "bg-gray-200 text-white";
-      break;
-  }
+  default:
+    colorClass = "bg-gray-300 text-gray-800";
+    break;
+}
 
 
   return (

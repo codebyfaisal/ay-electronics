@@ -43,7 +43,6 @@ export const handleCreateSale = async (req, res, next) => {
     // Create Sale
     const [error, sale] =
         await catchError(createSale({ ...parseResult.data, product }, next));
-        console.log(error);
     if (error instanceof Prisma.PrismaClientKnownRequestError)
         if (error.code === "P2002")
             return next(new AppError("Sale with this Name already exists", 409));

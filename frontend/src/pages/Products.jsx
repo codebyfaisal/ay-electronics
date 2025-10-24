@@ -55,9 +55,8 @@ const Products = () => {
           const result = await del(`/products/${id}`,
             { message: "Product deleted successfully" }
           );
-          if (result !== null) {
+          if (result !== null)
             refetch();
-          }
         }
         break;
       default:

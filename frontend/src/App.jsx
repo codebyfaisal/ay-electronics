@@ -122,6 +122,7 @@ import {
   Route,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import ErrorBoundary from "./pages/ErrorBoundary";
 
 // Layout
 import MainLayout from "./components/layout/MainLayout";
@@ -143,13 +144,14 @@ import CustomerNew from "./pages/CustomerNew";
 import ProductNew from "./pages/ProductNew";
 import ProductEdit from "./pages/ProductEdit";
 import SaleNew from "./pages/SaleNew";
-
+import Setting from "./pages/Setting";
+import OneShotSaleNew from "./pages/OneShotSaleNew";
 const App = () =>
 (
   <Router>
     <Toaster position="top-right" />
     <Routes>
-      <Route path="/" element={<MainLayout />}>
+      <Route path="/" element={<ErrorBoundary><MainLayout /></ErrorBoundary>}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/finance" element={<Finance />} />
@@ -164,6 +166,8 @@ const App = () =>
         <Route path="/sales" element={<Sales />} />
         <Route path="/sales/new" element={<SaleNew />} />
         <Route path="/sales/:id" element={<SaleDetail />} />
+        <Route path="/one-shot-sale" element={<OneShotSaleNew />} />
+        <Route path="/setting" element={<Setting />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

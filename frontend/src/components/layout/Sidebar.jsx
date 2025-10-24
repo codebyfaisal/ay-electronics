@@ -24,6 +24,7 @@ const navItems = [
   { name: "Products", path: "/products", icon: Package },
   { name: "Customers", path: "/customers", icon: Users },
   { name: "Sales", path: "/sales", icon: ShoppingBag },
+  { name: "One Shot Sale", path: "/one-shot-sale", icon: ShoppingBag },
 ];
 
 const Sidebar = () => {

@@ -14,8 +14,8 @@ import {
     ChevronDown,
     ChevronUp,
 } from "lucide-react";
-import { showInfo } from "../utils/toast";
 import formatCurrency from "../utils/formatCurrency";
+import useApi from "../utils/useApi";
 
 const DetailItem = ({ label, value, className = "" }) => (
     <div
@@ -33,9 +33,10 @@ const ProductDetail = () => {
     const navigate = useNavigate();
     const productId = Number(id);
     const [showTransactions, setShowTransactions] = useState(false);
-    
+    const { del } = useApi();
+
     const [transactionPage, setTransactionPage] = useState(1);
-    const TRANSACTION_LIMIT = 5; 
+    const TRANSACTION_LIMIT = 5;
     const {
         data: productReport,
         loading: reportLoading,
@@ -47,13 +48,14 @@ const ProductDetail = () => {
     }, [productId, transactionPage]);
 
     const {
+        refetch,
         data: transactionsData,
         loading: transactionsLoading,
         error: transactionsError,
     } = useFetch(transactionApiUrl, {}, true);
 
-    const productTransactions = transactionsData?.stockTransactions || []; 
-    const totalTransactions = transactionsData?.total || 0; 
+    const productTransactions = transactionsData?.stockTransactions || [];
+    const totalTransactions = transactionsData?.total || 0;
     const loading = reportLoading || transactionsLoading;
     const error = reportError || transactionsError;
 
@@ -62,9 +64,27 @@ const ProductDetail = () => {
         return productReport || {};
     }, [productReport]);
 
+    const handleAction = async (action, id) => {
+        switch (action) {
+            case "delete":
+                if (
+                    window.confirm(
+                        "Are you sure you want to delete this stock transaction? This will remove all associated sales may become inconsistent."
+                    )
+                ) {
+                    const result = await del(`/products/stocks/${id}`,
+                        { message: "Product deleted successfully" }
+                    );
+                    if (result !== null) refetch();
+                }
+                break;
+            default:
+                break;
+        }
+    };
+
 
     const hasReportData = !!productReport;
-
 
     const renderDirection = (direction) => {
         let colorClass =
@@ -98,13 +118,12 @@ const ProductDetail = () => {
         []
     );
 
-    if (error) {
+    if (error)
         return (
             <div className="text-center text-[rgb(var(--error))] p-4">
                 Error: {error}
             </div>
         );
-    }
 
     if (loading && !hasReportData)
         return <Spinner overlay={false} />;
@@ -163,7 +182,7 @@ const ProductDetail = () => {
                     />
                     <DetailItem
                         label="Added at"
-                        value={new Date(productTransactions.find((t) => t.initial)?.date).toLocaleDateString()}
+                        value={new Date(productOverview?.initialStockDate).toLocaleDateString()}
                     />
                 </div>
 
@@ -180,10 +199,10 @@ const ProductDetail = () => {
                         label="Total Purchase Cost"
                         value={formatCurrency(inventorySummary?.totalPurchaseCost)}
                     />
-                    <DetailItem
+                    {/* <DetailItem
                         label="Product Returns (In)"
                         value={`${inventorySummary?.productReturns} units`}
-                    />
+                    /> */}
                     <DetailItem
                         label="Supplier Returns (Out)"
                         value={`${inventorySummary?.supplierReturns} units`}
@@ -244,8 +263,8 @@ const ProductDetail = () => {
 
                 <div
                     className={`mt-4 overflow-hidden transition-all duration-300 ${showTransactions
-                            ? "max-h-[1000px] pt-4 border-t border-[rgb(var(--border))]"
-                            : "max-h-0"
+                        ? "max-h-[1000px] pt-4 border-t border-[rgb(var(--border))]"
+                        : "max-h-0"
                         }`}
                 >
                     <div className="relative">
@@ -255,14 +274,10 @@ const ProductDetail = () => {
                             pagination={{
                                 page: transactionPage,
                                 limit: TRANSACTION_LIMIT,
-                                total: totalTransactions, 
+                                total: totalTransactions,
                             }}
                             onPageChange={setTransactionPage}
-                            onAction={(action) =>
-                                showInfo(
-                                    `Action ${action} is not available for stock transactions.`
-                                )
-                            }
+                            onAction={handleAction}
                             activeActions={{
                                 view: false,
                                 edit: false,

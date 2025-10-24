@@ -10,6 +10,7 @@ import errorMiddleware from "./middlewares/error.middleware.js";
 import cors from "cors";
 import fs from "fs";
 import cookieParser from "cookie-parser";
+import watcher from "./middlewares/watcher.middleware.js";
 
 const app = express();
 
@@ -18,32 +19,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const frontendDist = path.join(process.cwd(), "frontend", "dist");
-// const frontendDist = path.join(process.cwd(), "../frontend", "dist");
-process.env.DATABASE_URL = `file:${path.join(process.cwd(), "dev.db")}`;
-const devConfigFile = path.join(process.cwd(), "dev.json");
-if (fs.existsSync(devConfigFile)) {
-  const devConfig = JSON.parse(fs.readFileSync(devConfigFile, "utf-8"));
-  process.env.PASSWORD = devConfig.PASSWORD;
-
-  if (devConfig?.BACKUP_DRIVE) {
-    const backupFolderPath = path.join(process.env.BACKUP_DRIVE, "ayApp", "backup");
-    if (fs.existsSync(backupFolderPath)) {
-      fs.rmSync(backupFolderPath, { recursive: true, force: true });
-    }
-    const backupDbPath = path.join(process.env.BACKUP_DRIVE, "ayApp", "backup", `${Date.now()}`, "dev.db");
-    fs.copyFileSync(path.join(process.cwd(), "dev.db"), backupDbPath);
-  }
-}
+// const frontendDist = path.join(process.cwd(), "frontend", "dist");
+const frontendDist = path.join(process.cwd(), "../frontend", "dist");
+// process.env.DATABASE_URL = `file:${path.join(process.cwd(), "db", "app.db")}`;
 
 // Test Routes
-app.get("/api/test", (req, res) => res.send("OK"));
+app.get("/api/test", (req, res) => {
+  return res.send("OK")
+});
 
 // Authentication Middleware 
-app.use(authenticate);
+// app.use(authenticate);
 
 // Api Routes
 app.use("/auth", authRouter);
+app.use(watcher)
 app.use("/api/finance", financeRouter);
 app.use("/api/customers", customerRouter);
 app.use("/api/products", productRouter);

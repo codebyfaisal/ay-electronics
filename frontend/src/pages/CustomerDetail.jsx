@@ -46,38 +46,45 @@ const CustomerDetail = () => {
   const loading = customerLoading || salesLoading;
   const error = customerError || salesError;
 
-  if (loading) {
-    return <Spinner overlay={false} />;
-  }
+  if (loading) return <Spinner overlay={false} />;
 
-  if (error) {
+  if (error)
     return (
       <div className="text-center text-[rgb(var(--error))] p-4">
         Error: {error}
       </div>
     );
-  }
 
-  if (!customer) {
+  if (!customer)
     return <div className="text-center p-4">Customer not found.</div>;
-  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Link to="/customers">
-          <Button variant="secondary" className="p-2">
-            <ArrowLeft className="w-5 h-5" />
+      <div className="flex items-center justify-between space-x-4">
+        <div className="flex gap-2">
+          <Link to="/customers">
+            <Button variant="secondary" className="p-2">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </Link>
+          <h1 className="text-3xl font-bold">Customer Report</h1>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            className="ml-auto"
+            onClick={() => navigate(`/sales?customerId=${customerId}`)}
+          >
+            View Sales
           </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">Customer Report</h1>
-        <Button
-          variant="secondary"
-          className="ml-auto"
-          onClick={() => navigate(`/customers/edit/${customerId}`)}
-        >
-          Edit Customer
-        </Button>
+          <Button
+            variant="primary"
+            className="ml-auto"
+            onClick={() => navigate(`/customers/edit/${customerId}`)}
+          >
+            Edit Customer
+          </Button>
+        </div>
       </div>
 
       <div className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))]">

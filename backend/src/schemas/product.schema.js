@@ -48,4 +48,5 @@ export const createProductStockSchema = z.object({
             error: "Stock Direction is required",
         })
     ),
+    paymentMethod: z.enum(["CASH", "BANK"]).default("CASH"),
 });

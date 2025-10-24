@@ -80,9 +80,10 @@ const Sales = () => {
     const productInput = filters.productQuery.trim();
     const customerFilterType = filters.customerFilterType;
 
-    if (customerInput) newAppliedFilters[customerFilterType] = customerInput;
 
+    if (customerInput) newAppliedFilters[customerFilterType] = customerInput;
     if (productInput) newAppliedFilters.productName = productInput;
+    if (filters.saleDate) newAppliedFilters.saleDate = filters.saleDate;
 
     setAppliedFilters(newAppliedFilters);
   };
@@ -161,6 +162,12 @@ const Sales = () => {
         currency: true
       },
       {
+        header: "Remaining Installments",
+        accessor: "remainingInstallments",
+        render: (row) => Number(row.remainingAmount).toLocaleString(),
+        className:"text-center"
+      },
+      {
         header: "Status", accessor: "status",
         render: (row) => <StatusBadge status={row.status} />
       },
@@ -235,8 +242,7 @@ const Sales = () => {
             onChange={(e) =>
               setFilters((f) => ({ ...f, saleDate: e.target.value }))
             }
-            disabled
-            className="col-span-full md:col-span-2 opacity-50"
+            className="col-span-full md:col-span-2"
           />
           <div className="flex justify-end items-end gap-4 col-span-full md:col-span-3">
             <Button
@@ -268,7 +274,6 @@ const Sales = () => {
           loading={fetchLoading || deleteLoading}
           activeActions={{
             view: true,
-            edit: true,
             remove: true,
           }}
         />

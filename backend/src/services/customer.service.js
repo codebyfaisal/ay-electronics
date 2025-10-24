@@ -1,9 +1,12 @@
 // src/services/customer.service.js
 import prisma from "../db/prisma.js";
 import pkg from "@prisma/client";
+import addContainsToWhere from "../utils/addConstrainsToWhere.js";
 const { Decimal } = pkg;
 
+
 export const getCustomers = async (where, { page, limit }) => {
+    where = addContainsToWhere(where);
     const customers = await prisma.customer.findMany({
         where,
         skip: (page - 1) * limit,

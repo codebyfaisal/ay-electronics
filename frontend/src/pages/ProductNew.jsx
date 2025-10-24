@@ -87,9 +87,7 @@ const ProductNew = () => {
       { message: "Product created successfully" }
     );
 
-    if (result) {
-      navigate(`/products/${result.id}`);
-    }
+    if (result) navigate(`/products/${result.id}`);
   };
 
   return (

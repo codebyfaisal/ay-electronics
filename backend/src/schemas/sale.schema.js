@@ -18,7 +18,7 @@ export const createSaleSchema = z.object({
     discount: z.coerce.number().min(0, "Discount must be equal or greater than 0").default(0),
     paidAmount: z.coerce.number().min(0, "Paid amount must be equal or greater than 0").default(0),
     downPayment: z.coerce.number().min(0, "Down payment must be equal or greater than 0").default(0),
-    totalInstallments: z.coerce.number().min(1).default(10).optional(),
+    totalInstallments: z.coerce.number().min(0).default(10).optional(),
 });
 
 export const returnSaleSchema = z.object({
@@ -31,6 +31,7 @@ export const returnSaleSchema = z.object({
 
 export const installmentSchema = z.object({
     id: idSchema,
+    paymentMethod: z.enum(["CASH", "BANK"]).default("CASH"),
     amount: z.coerce.number().min(1, "Amount must be greater than 0").optional(),
     paidDate: z.coerce.date({ error: "Date is required" }),
 });

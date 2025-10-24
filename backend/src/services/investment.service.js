@@ -61,18 +61,43 @@ export const createInvestment = async (data, next) => {
         if (investmentExist)
             return next(new AppError(`Investment for ${dayjs(date).format("MMM")} ${currentInvYear} already exists.`, 400));
 
-        return await tx.investment.create({ data });
+        const investment = await tx.investment.create({ data });
+
+        await tx.dailyTransaction.create({
+            data: {
+                date,
+                type: "CASH",
+                amount: investment.investment,
+                note: `Investment for ${dayjs(date).format("MMM")} ${currentInvYear}`,
+                direction: "IN",
+                investmentId: investment.id
+            },
+        });
+
+        return investment
     })
 }
 
 export const updateInvestment = async (data) => {
-    const investment = await prisma.investment.update({ where: { id: data.id }, data });
+    return await prisma.$transaction(async (tx) => {
+        const investment = await tx.investment.update({
+            where: { id: data.id },
+            data
+        });
 
-    const message = `Investment for ${dayjs(investment.date).format("MMM")} ${dayjs(investment.date).format("YYYY")} updated successfully.`;
+        await tx.dailyTransaction.updateMany({
+            where: { investmentId: data.id },
+            data: {
+                amount: data.investment
+            }
+        });
 
-    investment.message = message
+        const message = `Investment for ${dayjs(investment.date).format("MMM")} ${dayjs(investment.date).format("YYYY")} updated successfully.`;
 
-    return investment
+        investment.message = message
+
+        return investment
+    })
 }
 export const deleteInvestment = async (id) =>
     await prisma.investment.delete({ where: { id } });

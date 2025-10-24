@@ -42,10 +42,10 @@ export const getSummarySchema = z.object({
     startM: z.coerce
         .number({ error: "Start Month is required and must be between 1 and 12" })
         .min(1, "Start Month must be between 1 and 12")
-        .max(12, "Start Month must be between 1 and 12"),
+        .max(12, "Start Month must be between 1 and 12").optional(),
     startY: z.coerce
         .number({ error: "Start Year is required" })
-        .max(new Date().getFullYear(), "Year cannot be in the future"),
+        .max(new Date().getFullYear(), "Year cannot be in the future").optional(),
     endM: z.coerce
         .number({ error: "End Month is required and must be between 1 and 12" })
         .min(1, "End Month must be between 1 and 12")

@@ -31,26 +31,10 @@ export const getOneHandler = (schema, serviceFn, resourceName) => {
 
 export const getManyHandler = (serviceFn, resourceName) => {
     return async (req, res, next) => {
-        const where = queryValidator(req.query);
+        const where = queryValidator({ ...req.query, ...req.params });
         const pagination = paginate(req.query);
 
         const [error, results] = await catchError(serviceFn({ ...where }, { ...pagination }));
-        if (error) return next(error);
-        if (!results)
-            return next(new AppError(`${resourceName} not found`, 404));
-
-        return successRes(res, 200, true, `${resourceName}'s fetched successfully`, results);
-    };
-};
-
-export const getSummaryHandler = (schema, serviceFn, resourceName) => {
-    return async (req, res, next) => {
-        const parseResult = schema.safeParse(req.query);
-
-        if (!parseResult.success)
-            return next(new AppError(zodError(parseResult), 400));
-
-        const [error, results] = await catchError(serviceFn(parseResult.data, next));
         if (error) return next(error);
         if (!results)
             return next(new AppError(`${resourceName} not found`, 404));
@@ -84,7 +68,7 @@ export const createHandler = (schema, serviceFn, resourceName) => {
 
 export const updateHandler = (schema, serviceFn, resourceName) => {
     return async (req, res, next) => {
-        const parseResult = schema.safeParse({ ...req.params, ...req.body });
+        const parseResult = schema.safeParse({ ...req.query, ...req.params, ...req.body });
 
         if (!parseResult.success)
             return next(new AppError(zodError(parseResult), 400));
@@ -114,7 +98,6 @@ export const deleteHandler = (schema, serviceFn, resourceName) => {
             return next(new AppError(zodError(parseResult), 400));
 
         const [error, result] = await catchError(serviceFn(parseResult.data, next));
-
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025")
             return next(new AppError(`${resourceName} not found`, 404));
 

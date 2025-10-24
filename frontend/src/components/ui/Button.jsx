@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 
 const Button = ({
   children,
-  variant = "primary", // 'primary', 'secondary', 'danger', 'ghost'
+  variant = "primary",
   type = "button",
   onClick,
   className = "",
@@ -19,7 +19,7 @@ const Button = ({
   switch (variant) {
     case "primary":
       variantStyles =
-        "bg-[rgb(var(--primary))] hover:bg-green-600 ring-inset ring-[1px] focus:ring focus:ring-4 focus:ring-green-300 dark:hover:text-white";
+        "bg-[rgb(var(--color-primary))] hover:bg-purple-600/50 text-white";
       break;
     case "secondary":
       variantStyles =
@@ -34,7 +34,7 @@ const Button = ({
         "bg-transparent text-[rgb(var(--primary))] hover:bg-[rgb(var(--bg-secondary))]";
       break;
     default:
-      variantStyles = "bg-[rgb(var(--primary))] text-white hover:bg-green-600";
+      variantStyles = "bg-[rgb(var(--primary))] text-white hover:bg-[rgb(var(--color-primary))]";
   }
 
   // Handle disabled/loading states

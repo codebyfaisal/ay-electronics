@@ -108,21 +108,20 @@ const ProductEdit = () => {
 
   const loading = fetchLoading || updateLoading;
 
-  if (fetchError) {
+  if (fetchError)
     return (
       <div className="text-center text-[rgb(var(--error))] p-4">
         Error loading product data: {fetchError}
       </div>
     );
-  }
 
-  if (loading && !productReport) {
-    return <Spinner overlay={false} />;
-  }
+  if (loading && !productReport)
+    return (<section className="w-full h-full flex items-center justify-center">
+      <Spinner overlay={false} />;
+    </section>)
 
-  if (!productReport) {
+  if (!productReport)
     return <div className="text-center p-4">Product not found.</div>;
-  }
 
   return (
     <div className="space-y-6">
@@ -218,20 +217,20 @@ const ProductEdit = () => {
         </form>
       </div>
 
-      <AddStockForm productId={productId} onStockAdded={refetch} />
+      <AddStockForm onStockAdded={refetch} product={productReport.productOverview} />
     </div>
   );
 };
 
 export default ProductEdit;
 
-const AddStockForm = ({ productId, onStockAdded }) => {
+const AddStockForm = ({ onStockAdded, product }) => {
   const { post, loading: stockLoading } = useApi();
 
   const [stockFormData, setStockFormData] = useState({
     stockQuantity: 1,
     note: "",
-    date: new Date().toISOString().split("T")[0],
+    date: new Date(product?.initialStockDate).toISOString().split("T")[0],
     type: "PURCHASE_IN",
   });
 
@@ -269,11 +268,10 @@ const AddStockForm = ({ productId, onStockAdded }) => {
       return;
     }
 
-    // ✅ FIXED: Properly split type into baseType and direction
     const [rawType, direction] = stockFormData.type.split("_");
 
     const data = {
-      id: productId,
+      id: product?.id,
       stockQuantity: stockFormData.stockQuantity,
       note: stockFormData.note,
       date: new Date(stockFormData.date).toISOString(),
@@ -281,7 +279,7 @@ const AddStockForm = ({ productId, onStockAdded }) => {
       direction,
     };
 
-    const result = await post(`/products/${productId}/stocks`,
+    const result = await post(`/products/${product?.id}/stocks`,
       data, { message: "Stock updated successfully" }
     );
 
@@ -314,8 +312,19 @@ const AddStockForm = ({ productId, onStockAdded }) => {
             required
             error={stockErrors.type}
           />
+          <Select
+            label="Payment Method"
+            id="paymentMethod"
+            value={stockFormData.paymentMethod}
+            onChange={handleStockChange}
+            required
+            options={[
+              { value: "CASH", label: "Cash" },
+              { value: "BANK", label: "Bank" },
+            ]}
+          />
           <Input
-            label="Quantity to Add"
+            label="Quantity"
             name="stockQuantity"
             type="number"
             value={stockFormData.stockQuantity}
@@ -333,6 +342,8 @@ const AddStockForm = ({ productId, onStockAdded }) => {
             onChange={handleStockChange}
             required
             error={stockErrors.date}
+            min={new Date(product.initialStockDate).toISOString().split("T")[0]}
+            max={new Date().toISOString().split("T")[0]}
           />
           <Input
             label="Note (Optional)"

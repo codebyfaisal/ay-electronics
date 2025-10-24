@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { handleGetProducts, handleGetProductDetails, handleCreateProduct, handleUpdateProduct, handleDeleteProduct } from "../controllers/product.controller.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
-import { handleGetStockTransactions, handleCreateStockTransaction, handleDeleteStockTransaction } from "../controllers/stock.controller.js";
+import { handleCreateStockTransaction, handleDeleteStockTransaction, handleGetProductStockTransactions } from "../controllers/stock.controller.js";
 
 const router = Router();
 
-router.get("/:id/stocks", asyncHandler(handleGetStockTransactions));
+router.get("/:id/stocks", asyncHandler(handleGetProductStockTransactions));
 router.post("/:id/stocks", asyncHandler(handleCreateStockTransaction));
 router.delete("/stocks/:id", asyncHandler(handleDeleteStockTransaction));
 

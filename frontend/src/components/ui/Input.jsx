@@ -1,5 +1,6 @@
 // src/components/ui/Input.jsx
 import React from "react";
+import { useEffect } from "react";
 
 const Input = ({
   label,
@@ -13,8 +14,11 @@ const Input = ({
   required = false,
   count = false,
   currency = false,
+  min = 0,
   ...rest
 }) => {
+  if (type === "number" && value < min) value = '';
+
   const inputClasses = `w-full p-3 border rounded-md ${rest.disabled ? "cursor-not-allowed opacity-50" : ""
     } bg-[rgb(var(--input-bg))] text-[rgb(var(--text))]
   focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]
@@ -47,14 +51,14 @@ const Input = ({
         </p>
       )}
       {count && value.length > 0 && (
-        <b
-          className={`text-sm text-[rgb(var(--color-primary))] absolute top-1/2 right-2 translate-y-1 ${value.length > rest.maxLength
-              ? "text-[rgb(var(--color-error))]"
-              : ""
+        <span
+          className={`text-sm font-bold text-[rgb(var(--color-primary))] absolute top-1/2 right-2 ${value.length > rest.maxLength
+            ? "text-[rgb(var(--color-error))]"
+            : ""
             }`}
         >
           {value.length}
-        </b>
+        </span>
       )}
       {currency && (
         <span className={`ml-1 text-[0.7rem] absolute top-1/2 right-4 ${rest.disabled ? "opacity-50" : ""}`}>PKR</span>

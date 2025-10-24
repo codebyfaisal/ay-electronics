@@ -4,9 +4,10 @@ const MetricCard = ({
   icon: Icon,
   colorClass,
   currency = false,
+  order = "",
 }) => (
   <div
-    className={`bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] space-y-3`}
+    className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] space-y-3" style={{order}}
   >
     <div className="flex items-center justify-between">
       <p className="text-sm font-medium opacity-50">{title}</p>
@@ -14,9 +15,7 @@ const MetricCard = ({
     </div>
     <p>
       <span
-        className={`text-3xl font-extrabold ${
-          title.toLowerCase() === "total investment" ? "text-green-600" : ""
-        }`}
+        className={`font-bold ${title.toLowerCase() === "total investment" ? colorClass + " text-4xl" : "text-3xl"}`}
       >
         {value}
       </span>

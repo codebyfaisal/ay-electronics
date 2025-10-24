@@ -32,7 +32,6 @@ export const AuthProvider = ({ children }) => {
                 window.location.href = "/login";
             } else throw new Error(response.data.message || "Logout failed");
         } catch (error) {
-            console.log(error);
             showInfo(error.message || "Logout failed");
         }
     }

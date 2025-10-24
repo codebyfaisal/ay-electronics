@@ -1,5 +1,5 @@
 generator client {
-  provider      = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -22,6 +22,7 @@ enum SaleStatus {
   ACTIVE
   COMPLETED
   RETURNED
+  PARTIAL
 }
 
 enum InstallmentStatus {
@@ -59,19 +60,30 @@ model Investment {
   date       DateTime
   createdAt  DateTime @default(now())
 
+  dailyTransactions DailyTransaction[]
+
   @@map("investment")
 }
 
 // 🔹 Daily financial transactions
 model DailyTransaction {
-  id        Int       @id @default(autoincrement())
-  type      DailyType
-  amount    Float     @default(0)
-  direction Direction
-  note      String?
-  saleId    Int?
-  date      DateTime
-  createdAt DateTime  @default(now())
+  id               Int               @id @default(autoincrement())
+  type             DailyType
+  amount           Float             @default(0)
+  direction        Direction
+  note             String?
+  date             DateTime
+  investmentId     Int?
+  investment       Investment?       @relation(fields: [investmentId], references: [id])
+  saleId           Int?
+  sale             Sale?             @relation(fields: [saleId], references: [id])
+  installmentId    Int?
+  installment      Installment?      @relation(fields: [installmentId], references: [id])
+  productId        Int?
+  product          Product?          @relation(fields: [productId], references: [id])
+  stockId          Int?
+  stockTransaction StockTransaction? @relation(fields: [stockId], references: [id])
+  createdAt        DateTime          @default(now())
 
   @@map("daily_transaction")
 }
@@ -125,8 +137,9 @@ model Product {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  sales            Sale[]
-  stockTransaction StockTransaction[]
+  sales             Sale[]
+  dailyTransactions DailyTransaction[]
+  stockTransaction  StockTransaction[]
 
   @@map("product")
 }
@@ -139,6 +152,8 @@ model Sale {
   productId         Int
   product           Product       @relation(fields: [productId], references: [id])
   quantity          Int           @default(1)
+  returnQuantity    Int           @default(0)
+  returnAmount      Float?        @default(0)
   saleType          SaleType      @default(INSTALLMENT)
   paymentMethod     PaymentMethod @default(CASH)
   discount          Float         @default(0)
@@ -153,8 +168,9 @@ model Sale {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  installments     Installment[]
-  stockTransaction StockTransaction[]
+  installments      Installment[]
+  dailyTransactions DailyTransaction[]
+  stockTransaction  StockTransaction[]
 
   @@map("sale")
 }
@@ -173,19 +189,22 @@ model StockTransaction {
   sale      Sale?           @relation(fields: [saleId], references: [id])
   createdAt DateTime        @default(now())
 
+  dailyTransactions DailyTransaction[]
+
   @@map("stock_transaction")
 }
 
 model Installment {
-  id        Int               @id @default(autoincrement())
-  saleId    Int
-  sale      Sale              @relation(fields: [saleId], references: [id])
-  amount    Float             @default(0)
-  paidDate  DateTime?
-  dueDate   DateTime
-  status    InstallmentStatus @default(PENDING)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  id               Int                @id @default(autoincrement())
+  saleId           Int
+  sale             Sale               @relation(fields: [saleId], references: [id])
+  amount           Float              @default(0)
+  paidDate         DateTime?
+  dueDate          DateTime
+  status           InstallmentStatus  @default(PENDING)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  DailyTransaction DailyTransaction[]
 
   @@map("installment")
 }

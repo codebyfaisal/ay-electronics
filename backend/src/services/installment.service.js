@@ -35,7 +35,7 @@ const calculateSaleAmounts = (sale, paidInstallments, amount = 0) => {
 
     const newPaid = paidInstallmentsAmount + down + Number(amount);
     const remaining = total - discount - newPaid;
-    const status = remaining <= 0 ? "COMPLETED" : "ACTIVE";
+    const status = remaining <= 0 ? "COMPLETED" : sale.status === "PARTIAL" ? "PARTIAL" : "ACTIVE";
 
     if (newPaid > total) throw new Error("Paid amount cannot exceed total sale amount.");
 
@@ -46,12 +46,14 @@ const calculateSaleAmounts = (sale, paidInstallments, amount = 0) => {
     };
 };
 
-export const payInstallment = async ({ id: saleId, paidDate, amount }, next) => {
+export const payInstallment = async ({ id: saleId, paidDate, amount, paymentMethod }, next) => {
     return await prisma.$transaction(async (tx) => {
         const sale = await getSaleById(tx, saleId);
 
         if (sale.status === "COMPLETED")
             return next(new AppError("Sale is already completed.", 400));
+        else if (sale.status === "RETURNED")
+            return next(new AppError("Sale is already returned.", 400));
 
         const paid = sale.installments.filter((i) => i.status === "PAID");
         const pending = sale.installments.filter((i) => i.status === "PENDING");
@@ -83,6 +85,8 @@ export const payInstallment = async ({ id: saleId, paidDate, amount }, next) => 
             data: { status: "LATE" },
         });
 
+        console.log(installmentToPay);
+
         if (status === "COMPLETED") {
             await tx.installment.updateMany({
                 where: {
@@ -101,11 +105,12 @@ export const payInstallment = async ({ id: saleId, paidDate, amount }, next) => 
 
         await tx.dailyTransaction.create({
             data: {
-                type: 'CASH',
+                type: paymentMethod,
                 direction: "IN",
                 amount: amount,
                 date: paidDate,
-                note: `Installment payment for Sale ID ${sale.id}`,
+                note: `Sale #${sale.id} installment paid`,
+                saleId: sale.id
             }
         });
 
@@ -128,13 +133,17 @@ export const updateInstallment = async ({ id, amount, paidDate }, next) => {
             where: { id },
             include: { sale: true },
         });
+        const sale = installment.sale;
+
+        if (sale.status === "COMPLETED")
+            return next(new AppError("Sale is already completed.", 400));
+        else if (sale.status === "RETURNED")
+            return next(new AppError("Sale is already returned.", 400));
 
         if (!installment)
             return next(new AppError("Installment not found.", 404));
         if (installment.status !== "PAID")
             return next(new AppError("Only PAID installments can be edited.", 400));
-
-        const sale = installment.sale;
 
         if (paidDate < sale.saleDate)
             return next(new AppError(
@@ -157,6 +166,11 @@ export const updateInstallment = async ({ id, amount, paidDate }, next) => {
         await tx.installment.update({
             where: { id },
             data: { amount: amount, paidDate: paidDate },
+        });
+
+        await tx.dailyTransaction.updateMany({
+            where: { installmentId: id },
+            data: { amount, date: paidDate },
         });
 
         if (status === "COMPLETED") {

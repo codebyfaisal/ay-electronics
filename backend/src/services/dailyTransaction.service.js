@@ -18,6 +18,7 @@ export const getDailyTransactions = async (where, { page, limit }) => {
     else if
         (endDate) dateRangeCondition = { date: { lte: new Date(endDate) } };
 
+
     const finalWhere = {
         ...otherFilters,
         ...dateRangeCondition,
@@ -28,7 +29,7 @@ export const getDailyTransactions = async (where, { page, limit }) => {
             where: finalWhere,
             skip: (page - 1) * limit,
             take: limit,
-            orderBy: { date: 'desc' }
+            orderBy: { id: 'desc' }
         });
 
         const total = await tx.dailyTransaction.count({
@@ -53,24 +54,48 @@ export const createDailyTransaction = async (data) =>
         }
     });
 
-export const updateDailyTransaction = async (data) => {
-    data.direction = direction(data.type);
-    return await prisma.dailyTransaction.update({
-        where: { id: data.id },
-        data
-    });
+export const updateDailyTransaction = async (data, next) => {
+    return await prisma.$transaction(async (tx) => {
+        data.direction = direction(data.type);
+
+        const haveSaleId = await tx.dailyTransaction.findFirst({
+            where: { id: data.id },
+            select: {
+                saleId: true, productId: true,
+                stockId: true, installmentId: true,
+                investmentId: true
+            },
+        });
+
+        if (haveSaleId.saleId === null && haveSaleId.productId === null &&
+            haveSaleId.stockId === null && haveSaleId.installmentId === null &&
+            haveSaleId.investmentId === null)
+            return await tx.dailyTransaction.update({
+                where: { id: data.id },
+                data
+            });
+
+        return next(new AppError("Cannot update a Payment transaction when it is linked to a Product, Stock, Installment or Sale", 400));
+
+    })
 }
 
 export const deleteDailyTransaction = async (id, next) => {
     return await prisma.$transaction(async (tx) => {
         const haveSaleId = await tx.dailyTransaction.findFirst({
             where: { id },
-            select: { saleId: true }
+            select: {
+                saleId: true, productId: true,
+                stockId: true, installmentId: true,
+                investmentId: true
+            },
         });
 
-        if (haveSaleId.saleId === null)
+        if (haveSaleId.saleId === null && haveSaleId.productId === null &&
+            haveSaleId.stockId === null && haveSaleId.installmentId === null &&
+            haveSaleId.investmentId === null)
             return await tx.dailyTransaction.delete({ where: { id } });
 
-        return next(new AppError("Cannot delete a transaction with sale", 400));
+        return next(new AppError("Cannot delete a Payment transaction when it is linked to a Product, Stock, Installment or Sale", 400));
     })
 }

@@ -35,7 +35,7 @@ const DailyTransactionsTab = () => {
 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filterForm, setFilterForm] = useState({
-    startDate: "", endDate: ""
+    startDate: "", endDate: "", type: ""
   });
   const [appliedFilters, setAppliedFilters] = useState({});
 
@@ -61,6 +61,8 @@ const DailyTransactionsTab = () => {
 
   const transactions = transactionsData?.dailyTransactions || [];
   const total = transactionsData?.total || 0;
+
+  console.log(transactions);
 
   const handleSaveTransaction = async (data) => {
     const isNew = !data.id;
@@ -92,7 +94,6 @@ const DailyTransactionsTab = () => {
     setIsCrudModalOpen(true);
   };
 
-  // Opens modal for editing
   const handleOpenEditModal = (transaction) => {
     const formattedTransaction = {
       ...transaction,
@@ -107,30 +108,27 @@ const DailyTransactionsTab = () => {
 
     if (form.startDate) newAppliedFilters.startDate = new Date(form.startDate).toISOString();
     if (form.endDate) newAppliedFilters.endDate = new Date(form.endDate).toISOString();
+    if (form.type) newAppliedFilters.type = form.type;
 
-    setFilterForm(form); // Keep the form state updated
+    setFilterForm(form);
     setPage(1);
     setAppliedFilters(newAppliedFilters);
     setIsFilterModalOpen(false);
   };
 
   const handleResetFilters = () => {
-    setFilterForm({ startDate: "", endDate: "" });
+    setFilterForm({ startDate: "", endDate: "", type: "" });
     setAppliedFilters({});
     setPage(1);
     setIsFilterModalOpen(false);
   };
 
   const handleDelete = async (id) => {
-    if (
-      window.confirm("Are you sure you want to delete this daily transaction?")
-    ) {
+    if (window.confirm("Are you sure you want to delete this daily transaction?")) {
       const result = await del(`/finance/daily-transactions/${id}`,
         { message: "Transaction deleted successfully" }
       );
-      if (result !== null) {
-        refetch();
-      }
+      if (result !== null) refetch();
     }
   };
 
@@ -193,6 +191,7 @@ const DailyTransactionsTab = () => {
   ];
 
   const filterFields = [
+    { key: 'type', label: 'Type', type: 'select', options: transactionTypes, required: false },
     { key: 'startDate', label: 'Start Date', type: 'date', required: false },
     { key: 'endDate', label: 'End Date', type: 'date', required: false },
   ];
@@ -285,7 +284,7 @@ const DailyTransactionsTab = () => {
           initialData={filterForm}
           fields={filterFields}
           onClose={() => setIsFilterModalOpen(false)}
-          onSave={handleApplyFilters} // Apply filters on save
+          onSave={handleApplyFilters}
           loading={apiLoading}
         />
       )}
