@@ -4,7 +4,6 @@ import pkg from "@prisma/client";
 import addContainsToWhere from "../utils/addConstrainsToWhere.js";
 const { Decimal } = pkg;
 
-
 export const getCustomers = async (where, { page, limit }) => {
     where = addContainsToWhere(where);
     const customers = await prisma.customer.findMany({
@@ -12,7 +11,6 @@ export const getCustomers = async (where, { page, limit }) => {
         skip: (page - 1) * limit,
         take: limit,
     });
-
     const total = await prisma.customer.count({ where });
 
     return { customers, total };
@@ -36,15 +34,12 @@ export const getCustomer = async (id) => {
             },
         },
     });
-
     if (!customer) return null;
 
-    // --- Compute Aggregated Metrics ---
     let totalPurchaseValue = new Decimal(0);
     let totalPaidAmount = new Decimal(0);
     let totalDiscountReceived = new Decimal(0);
     let totalRemainingBalance = new Decimal(0);
-
     const statusCounts = { ACTIVE: 0, COMPLETED: 0, CANCELLED: 0 };
     const saleTypeCounts = { CASH: 0, INSTALLMENT: 0 };
     const uniqueProductIds = new Set();
@@ -94,6 +89,5 @@ export const updateCustomer = async (data) =>
         where: { id: data.id },
         data,
     });
-
 export const deleteCustomer = async (id) =>
     await prisma.customer.delete({ where: { id } });

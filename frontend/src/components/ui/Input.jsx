@@ -1,6 +1,5 @@
 // src/components/ui/Input.jsx
 import React from "react";
-import { useEffect } from "react";
 
 const Input = ({
   label,
@@ -9,26 +8,26 @@ const Input = ({
   value,
   onChange,
   placeholder,
-  error,
+  error = "",
   className = "",
   required = false,
   count = false,
   currency = false,
   min = 0,
+  inputClass = null,
   ...rest
 }) => {
   if (type === "number" && value < min) value = '';
 
-  const inputClasses = `w-full p-3 border rounded-md ${rest.disabled ? "cursor-not-allowed opacity-50" : ""
-    } bg-[rgb(var(--input-bg))] text-[rgb(var(--text))]
+  const inputClasses = `w-full p-3 border rounded-md ${inputClass ? inputClass : "bg-[rgb(var(--input-bg))] text-[rgb(var(--text))]"}
   focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]
   transition-all duration-300
   placeholder-gray-500 dark:placeholder-gray-400
-  ${error ? "border-[rgb(var(--error))]" : "border-[rgb(var(--border))]"}
+  ${error ? "border-[rgb(var(--color-error))]" : "border-[rgb(var(--border))]"}
   `;
 
   return (
-    <div className={`flex flex-col ${className} relative space-y-2`}>
+    <div className={`flex flex-col ${className} relative`}>
       {label && (
         <label htmlFor={id} className="font-medium text-sm mb-1">
           {label}
@@ -45,23 +44,21 @@ const Input = ({
         required={required}
         {...rest}
       />
-      {error && (
-        <p className="text-sm text-[rgb(var(--color-error))] absolute top-full left-3 -translate-y-2">
+      {error &&
+        <p className="text-sm text-[rgb(var(--color-error))] absolute top-full left-3 -translate-y-1">
           {error}
         </p>
-      )}
-      {count && value.length > 0 && (
-        <span
-          className={`text-sm font-bold text-[rgb(var(--color-primary))] absolute top-1/2 right-2 ${value.length > rest.maxLength
-            ? "text-[rgb(var(--color-error))]"
-            : ""
-            }`}
-        >
-          {value.length}
-        </span>
-      )}
+      }
+      <span
+        className={`text-sm font-bold text-[rgb(var(--color-primary))] absolute top-1/2 right-4 translate-y-1
+    ${value && rest.maxLength && value.length > rest.maxLength ? "text-[rgb(var(--color-error))]" : ""}
+    ${!count || !value || value.length <= 0 ? "hidden" : "visible"}`}
+      >
+        {value ? value.length : 0}
+      </span>
+
       {currency && (
-        <span className={`ml-1 text-[0.7rem] absolute top-1/2 right-4 ${rest.disabled ? "opacity-50" : ""}`}>PKR</span>
+        <span className={`ml-1 text-[0.7rem] absolute top-1/2 right-4 translate-y-1.5 ${rest.disabled ? "opacity-50" : ""}`}>PKR</span>
       )}
     </div>
   );

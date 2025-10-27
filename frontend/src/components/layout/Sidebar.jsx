@@ -12,6 +12,7 @@ import {
   X,
   Sun,
   Moon,
+  WalletCards,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -24,7 +25,7 @@ const navItems = [
   { name: "Products", path: "/products", icon: Package },
   { name: "Customers", path: "/customers", icon: Users },
   { name: "Sales", path: "/sales", icon: ShoppingBag },
-  { name: "One Shot Sale", path: "/one-shot-sale", icon: ShoppingBag },
+  { name: "One Shot Sale", path: "/one-shot-sale", icon: WalletCards },
 ];
 
 const Sidebar = () => {

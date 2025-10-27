@@ -6,15 +6,6 @@ import zodError from "../utils/zod.error.js";
 import queryValidator from "../utils/queryValidator.util.js";
 import paginate from "../utils/paginate.util.js";
 
-/**
- * Generates an Express handler for creating resources.
- *
- * @param {ZodSchema} schema - Zod schema to validate the request body.
- * @param {Function} serviceFn - Async function to call with parsed data.
- * @param {string} resourceName - Name of the resource.
- * @returns Express middleware function (req, res, next)
- */
-
 export const getOneHandler = (schema, serviceFn, resourceName) => {
     return async (req, res, next) => {
         const parseResult = schema.safeParse(req.params.id);
@@ -84,7 +75,6 @@ export const updateHandler = (schema, serviceFn, resourceName) => {
                     return next(new AppError("Foreign key constraint failed", 409));
             }
         }
-
         if (error) return next(error);
         return successRes(res, 200, true, `${resourceName} updated successfully`, result);
     };

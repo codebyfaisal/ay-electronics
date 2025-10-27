@@ -3,6 +3,7 @@ import app from "./src/app.js";
 import killPort from './src/os/portKiller.os.js';
 import openBrowser from './src/os/openBrowser.os.js';
 import { readAppConfig, runDailyLocalBackup, updateEnvironment } from "./src/os/dbBacker.os.js";
+import { updateAllOverdueStatus } from "./src/services/installment.service.js";
 
 dotenv.config();
 updateEnvironment({
@@ -30,6 +31,7 @@ async function startServerWithFallback(portList, index = 0) {
         const url = `http://localhost:${port}`;
         console.log(`\n🎉 Server successfully started on port ${port}.`);
         console.log(`Access the application at: ${url}`);
+        updateAllOverdueStatus();
         // openBrowser(url);
 
         runDailyLocalBackup(readAppConfig()?.BACKUP_DRIVE);

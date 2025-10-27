@@ -1,12 +1,8 @@
-import { performDbBackup, readAppConfig } from "../os/dbBacker.os.js";
-import { getNoOfWrites, increaseNoOfWrites, resetNoOfWrites } from "../store/session.store.js";
+import checkAppDate from "../utils/checkAppDate.util.js";
+import dateErrorHtml from "../views/dateError.html" with { type: "text" };
 
 const watcher = (req, res, next) => {
-    if (["POST", "PUT", "DELETE"].includes(req.method)) increaseNoOfWrites();
-    if (getNoOfWrites() > 20) {
-        performDbBackup(readAppConfig()?.BACKUP_DRIVE)
-        resetNoOfWrites();
-    };
+    // if (!checkAppDate()) return res.send(dateErrorHtml);
     next();
 }
 

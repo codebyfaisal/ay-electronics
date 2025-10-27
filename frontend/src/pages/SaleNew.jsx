@@ -12,25 +12,20 @@ import { ArrowLeft, ShoppingBag, Save } from "lucide-react";
 import { showError } from "../utils/toast";
 
 const SALE_TYPES = [
-  { label: "Cash", value: "CASH" },
   { label: "Installment", value: "INSTALLMENT" },
-];
-
-const PAYMENT_METHODS = [
   { label: "Cash", value: "CASH" },
-  { label: "Bank", value: "BANK" },
 ];
 
 const initialFormData = {
   customerId: "",
   productId: "",
+  agreementNo: "",
   saleDate: new Date().toISOString().split("T")[0],
-  paymentMethod: "CASH",
   quantity: 1,
   discount: 0,
   paidAmount: 0,
-  downPayment: 0,
-  saleType: "CASH",
+  firstInstallment: 0,
+  saleType: "INSTALLMENT",
   totalInstallments: 1,
 };
 
@@ -54,7 +49,7 @@ const SaleNew = () => {
 
   const totalAmount = sellingPrice * Number(formData.quantity);
   const discount = Number(formData.discount);
-  const downPayment = Number(formData.downPayment);
+  const firstInstallment = Number(formData.firstInstallment);
   const totalInstallments = Number(formData.totalInstallments);
 
   const remainingAfterDiscount = Math.max(0, totalAmount - discount);
@@ -62,24 +57,24 @@ const SaleNew = () => {
   const remainingAmount = useMemo(() => {
     let remaining = remainingAfterDiscount;
 
-    if (formData.saleType === "INSTALLMENT") remaining -= downPayment;
+    if (formData.saleType === "INSTALLMENT") remaining -= firstInstallment;
     else remaining -= Number(formData.paidAmount);
 
     return Math.max(0, remaining);
   }, [
     remainingAfterDiscount,
     formData.saleType,
-    downPayment,
+    firstInstallment,
     formData.paidAmount,
   ]);
 
   const payPerInstallment = useMemo(() => {
     if (formData.saleType !== "INSTALLMENT" || totalInstallments < 1) return 0;
 
-    const amountToInstall = remainingAfterDiscount - downPayment;
+    const amountToInstall = remainingAfterDiscount - firstInstallment;
 
     return Math.ceil(Math.max(0, amountToInstall) / totalInstallments);
-  }, [remainingAfterDiscount, downPayment, totalInstallments, formData.saleType]);
+  }, [remainingAfterDiscount, firstInstallment, totalInstallments, formData.saleType]);
 
 
   useEffect(() => {
@@ -89,13 +84,13 @@ const SaleNew = () => {
         return {
           ...prev,
           paidAmount: newPaid,
-          downPayment: newPaid,
+          firstInstallment: newPaid,
           totalInstallments: 0,
         };
       } else if (prev.saleType === "INSTALLMENT") {
         return {
           ...prev,
-          paidAmount: prev.downPayment,
+          paidAmount: prev.firstInstallment,
           totalInstallments: prev.totalInstallments || 1,
         };
       }
@@ -112,16 +107,15 @@ const SaleNew = () => {
         "quantity",
         "discount",
         "paidAmount",
-        "downPayment",
+        "firstInstallment",
         "totalInstallments",
       ].includes(name)
     ) newValue = value === "" ? 0 : parseFloat(value);
 
-
     setFormData((prev) => {
       let newState = { ...prev, [name]: newValue };
 
-      if (name === "downPayment" && prev.saleType === "INSTALLMENT")
+      if (name === "firstInstallment" && prev.saleType === "INSTALLMENT")
         newState.paidAmount = newValue;
 
       return newState;
@@ -135,6 +129,9 @@ const SaleNew = () => {
     if (!formData.customerId) newErrors.customerId = "Customer is required.";
     if (!formData.productId) newErrors.productId = "Product is required.";
 
+    if (Number(formData.agreementNo) < 1)
+      newErrors.agreementNo = "Agreement number must be greater than 0.";
+
     if (selectedProduct && formData.quantity > stockQuantity)
       newErrors.quantity = `Not enough stock available. Max: ${stockQuantity}`;
 
@@ -142,10 +139,10 @@ const SaleNew = () => {
       if (totalInstallments < 1 || totalInstallments > 10)
         newErrors.totalInstallments = "Installments must be between 1 and 10.";
 
-      if (downPayment > remainingAfterDiscount)
-        newErrors.downPayment = `Down payment cannot exceed price (${remainingAfterDiscount}).`;
+      if (firstInstallment > remainingAfterDiscount)
+        newErrors.firstInstallment = `First Installment cannot exceed price (${remainingAfterDiscount}).`;
 
-      if (remainingAfterDiscount > downPayment && payPerInstallment <= 0)
+      if (remainingAfterDiscount > firstInstallment && payPerInstallment <= 0)
         newErrors.totalInstallments = "Number of installments is too high for the remaining amount.";
     }
 
@@ -168,28 +165,27 @@ const SaleNew = () => {
       customerId: Number(formData.customerId),
       productId: Number(formData.productId),
       saleDate: new Date(formData.saleDate).toISOString(),
-      paymentMethod: formData.paymentMethod,
       saleType: formData.saleType,
       quantity: Number(formData.quantity),
       discount: Number(formData.discount),
+      agreementNo: Number(formData.agreementNo),
     };
 
     if (formData.saleType === "CASH") {
       const paid = remainingAfterDiscount;
       data.paidAmount = paid;
-      data.downPayment = paid;
+      data.firstInstallment = paid;
       data.totalInstallments = 0;
-      data.perInstallment = paid; 
+      data.perInstallment = paid;
       data.remainingAmount = 0;
 
     } else if (formData.saleType === "INSTALLMENT") {
-      data.downPayment = downPayment;
-      data.paidAmount = downPayment;
+      data.firstInstallment = firstInstallment;
+      data.paidAmount = firstInstallment;
       data.totalInstallments = totalInstallments;
       data.perInstallment = payPerInstallment;
       data.remainingAmount = remainingAmount;
     }
-
 
     const result = await post("/sales", data,
       { message: "Sale created successfully" });
@@ -198,8 +194,11 @@ const SaleNew = () => {
 
   };
 
-  if (createLoading) return <Spinner overlay={true} />;
-
+  if (createLoading) return (
+    <section className="w-full h-full flex items-center justify-center">
+      <Spinner overlay={false} />;
+    </section>
+  )
 
   return (
     <div className="space-y-6">
@@ -212,25 +211,14 @@ const SaleNew = () => {
         <h1 className="text-3xl font-bold">Add New Sale</h1>
       </div>
 
-      <div className="bg-[rgb(var(--bg))] p-8 rounded-md shadow-md border border-[rgb(var(--border))] max-w-5xl mx-auto">
+      <div className="bg-[rgb(var(--bg))] p-8 rounded-md shadow-md border border-[rgb(var(--border))]">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex items-center justify-between border-b pb-2 mb-4">
-            <h2 className="text-xl font-semibold flex items-center">
-              <ShoppingBag className="w-5 h-5 mr-2 text-[rgb(var(--primary))]" />{" "}
-              Sale Details
-            </h2>
-            <Select
-              label="Sale Type"
-              name="saleType"
-              value={formData.saleType}
-              onChange={handleChange}
-              options={SALE_TYPES}
-              required
-              disabled={stockQuantity === 0}
-            />
-          </div>
+          <h2 className="flex items-center border-b pb-2 mb-4 text-xl font-semibold">
+            <ShoppingBag className="w-5 h-5 mr-2 text-[rgb(var(--primary))]" />{" "}
+            Sale Details
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <SearchableFilterSelect
               label="Customer"
               name="customerId"
@@ -244,7 +232,6 @@ const SaleNew = () => {
               required
               error={errors.customerId}
             />
-
             <SearchableFilterSelect
               label="Product"
               name="productId"
@@ -258,7 +245,15 @@ const SaleNew = () => {
               required
               error={errors.productId}
             />
-
+            <Input
+              label="Agreement No."
+              name="agreementNo"
+              type="number"
+              value={formData.agreementNo}
+              onChange={handleChange}
+              required
+              error={errors.agreementNo}
+            />
             <Input
               label="Sale Date"
               name="saleDate"
@@ -266,15 +261,18 @@ const SaleNew = () => {
               value={formData.saleDate}
               onChange={handleChange}
               required
+              error={errors.saleDate}
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-4 border-t border-[rgb(var(--border))]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 pt-4 border-t border-[rgb(var(--border))]">
             <Input
               label="Selling Price (Unit)"
               value={sellingPrice.toLocaleString()}
-              disabled
               currency={true}
+              error={errors.sellingPrice}
+              className="opacity-50"
+              disabled
             />
             <Input
               label={`Quantity (Max: ${stockQuantity})`}
@@ -282,17 +280,34 @@ const SaleNew = () => {
               type="number"
               value={stockQuantity === 0 ? 0 : formData.quantity}
               onChange={handleChange}
-              min={stockQuantity === 0 ? 0 : 1}
+              min={0}
               max={stockQuantity}
               required
               error={errors.quantity}
               disabled={stockQuantity === 0}
             />
             <Input
-              label="Total Amount"
+              label="Total Amount (selling price * quantity)"
               value={totalAmount.toLocaleString()}
               disabled
               currency={true}
+              className="opacity-50"
+              min={0}
+            />
+          </div>
+
+          <h3 className="text-lg font-semibold border-b pb-2 pt-4 lg:pt-0">
+            Payment
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Select
+              label="Sale Type"
+              name="saleType"
+              value={formData.saleType}
+              onChange={handleChange}
+              options={SALE_TYPES}
+              required
+              disabled={stockQuantity === 0}
             />
             <Input
               label="Discount"
@@ -300,52 +315,31 @@ const SaleNew = () => {
               type="number"
               value={formData.discount}
               onChange={handleChange}
-              min={0}
               error={errors.discount}
               currency={true}
               disabled={stockQuantity === 0}
             />
-          </div>
-
-          <div className="flex items-center border-b pb-2 pt-4">
-            <h3 className="text-lg font-semibold">
-              Payment
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Select
-              label="Payment Method"
-              name="paymentMethod"
-              value={formData.paymentMethod}
-              onChange={handleChange}
-              options={PAYMENT_METHODS}
-              required
-              disabled={stockQuantity === 0}
-            />
-
             {formData.saleType === "INSTALLMENT" ? (
               <>
                 <Input
-                  label="Down Payment"
-                  name="downPayment"
+                  label="First Installment"
+                  name="firstInstallment"
                   type="number"
-                  value={formData.downPayment}
+                  value={formData.firstInstallment}
                   onChange={handleChange}
                   min={0}
-                  max={remainingAfterDiscount} // Added max constraint
-                  error={errors.downPayment}
+                  max={remainingAfterDiscount}
+                  error={errors.firstInstallment}
                   currency={true}
                   disabled={stockQuantity === 0}
                 />
                 <Input
-                  label="No. of Installments (Max 10)"
+                  label="No. of Installments"
                   name="totalInstallments"
                   type="number"
                   value={formData.totalInstallments}
                   onChange={handleChange}
-                  min={1}
-                  max={10}
+                  min={0}
                   step={1}
                   error={errors.totalInstallments}
                   disabled={stockQuantity === 0}
@@ -354,7 +348,7 @@ const SaleNew = () => {
                   label="Pay Per Installment"
                   name="installmentAmount"
                   type="number"
-                  value={payPerInstallment} // <-- Uses calculated value
+                  value={payPerInstallment}
                   disabled
                   currency={true}
                 />
@@ -364,18 +358,18 @@ const SaleNew = () => {
                 label="Paid Amount (Total - Discount)"
                 name="paidAmount"
                 type="number"
-                value={remainingAfterDiscount} // <-- Use correctly calculated value
+                value={remainingAfterDiscount}
                 disabled={stockQuantity === 0}
                 currency={true}
               />
             )}
-
             <Input
               label="Remaining Balance"
               value={remainingAmount.toLocaleString()}
               disabled
-              className="font-bold"
+              className="font-bold col-start-3"
               currency={true}
+              inputClass="ring-2 ring-[rgb(var(--color-primary))] text-[rgb(var(--color-primary))]"
             />
           </div>
 

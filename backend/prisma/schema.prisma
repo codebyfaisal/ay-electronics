@@ -7,34 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ----------------------------------------------------
 // --- ENUMS ---
-enum SaleType {
-  CASH
-  INSTALLMENT
-}
+// ----------------------------------------------------
 
-enum PaymentMethod {
+enum CashType {
+  EXPENSE
   CASH
   BANK
-}
-
-enum SaleStatus {
-  ACTIVE
-  COMPLETED
-  RETURNED
-  PARTIAL
-}
-
-enum InstallmentStatus {
-  PENDING
-  PAID
-  LATE
-}
-
-enum TransactionType {
-  PURCHASE
-  SALE
-  RETURN
+  DEBT
 }
 
 enum Direction {
@@ -42,82 +23,40 @@ enum Direction {
   OUT
 }
 
-enum DailyType {
-  EXPENSE
-  BANK
-  DEBT
+enum StockType {
+  PURCHASE
+  SALE
+  SUPPLIER_RETURN
+}
+
+enum SaleType {
   CASH
+  INSTALLMENT
 }
 
+enum SaleStatus {
+  ACTIVE
+  COMPLETED
+  RETURNED
+}
+
+enum InstallmentStatus {
+  UPCOMING
+  LATE
+  PAID
+  PAID_LATE
+}
+
+// ----------------------------------------------------
 // --- MODELS ---
-
-// 🔹 Base investment (one-time or capital injection)
-model Investment {
-  id         Int      @id @default(autoincrement())
-  investor   String
-  investment Float    @default(0)
-  note       String?
-  date       DateTime
-  createdAt  DateTime @default(now())
-
-  dailyTransactions DailyTransaction[]
-
-  @@map("investment")
-}
-
-// 🔹 Daily financial transactions
-model DailyTransaction {
-  id               Int               @id @default(autoincrement())
-  type             DailyType
-  amount           Float             @default(0)
-  direction        Direction
-  note             String?
-  date             DateTime
-  investmentId     Int?
-  investment       Investment?       @relation(fields: [investmentId], references: [id])
-  saleId           Int?
-  sale             Sale?             @relation(fields: [saleId], references: [id])
-  installmentId    Int?
-  installment      Installment?      @relation(fields: [installmentId], references: [id])
-  productId        Int?
-  product          Product?          @relation(fields: [productId], references: [id])
-  stockId          Int?
-  stockTransaction StockTransaction? @relation(fields: [stockId], references: [id])
-  createdAt        DateTime          @default(now())
-
-  @@map("daily_transaction")
-}
-
-// 🔹 Monthly summarized data (auto or manual aggregation)
-model MonthlySummary {
-  id              Int      @id @default(autoincrement())
-  month           Int
-  year            Int
-  totalExpense    Float    @default(0)
-  totalDebt       Float    @default(0)
-  totalBank       Float    @default(0)
-  totalCash       Float    @default(0)
-  totalSales      Float    @default(0)
-  costOfStock     Float    @default(0)
-  grossProfit     Float    @default(0)
-  netProfit       Float    @default(0)
-  stockValue      Float    @default(0)
-  totalInvestment Float    @default(0)
-  createdAt       DateTime @default(now())
-
-  @@unique([year, month], name: "year_month")
-  @@map("monthly_summary")
-}
-
-// --- SALES SYSTEM MODELS ---
+// ----------------------------------------------------
 
 model Customer {
   id        Int      @id @default(autoincrement())
   name      String
-  email     String?
-  cnic      String   @unique
+  cnic      String?  @unique
   phone     String
-  address   String?
+  address   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -131,80 +70,123 @@ model Product {
   name          String   @unique
   category      String   @default("uncategorized")
   brand         String   @default("generic")
-  buyingPrice   Float    @default(0)
+  stockQuantity Int      @default(0)
   sellingPrice  Float    @default(0)
-  stockQuantity Int
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  sales             Sale[]
-  dailyTransactions DailyTransaction[]
-  stockTransaction  StockTransaction[]
+  sales            Sale[]
+  stockTransaction StockTransaction[]
 
   @@map("product")
 }
 
-model Sale {
-  id                Int           @id @default(autoincrement())
-  saleDate          DateTime      @default(now())
-  customerId        Int
-  customer          Customer      @relation(fields: [customerId], references: [id])
-  productId         Int
-  product           Product       @relation(fields: [productId], references: [id])
-  quantity          Int           @default(1)
-  returnQuantity    Int           @default(0)
-  returnAmount      Float?        @default(0)
-  saleType          SaleType      @default(INSTALLMENT)
-  paymentMethod     PaymentMethod @default(CASH)
-  discount          Float         @default(0)
-  totalAmount       Float         @default(0)
-  downPayment       Float         @default(0)
-  perInstallment    Float         @default(0)
-  totalInstallments Int           @default(10)
-  paidInstallments  Int           @default(0)
-  paidAmount        Float         @default(0)
-  remainingAmount   Float         @default(0)
-  status            SaleStatus    @default(ACTIVE)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  installments      Installment[]
-  dailyTransactions DailyTransaction[]
-  stockTransaction  StockTransaction[]
-
-  @@map("sale")
-}
-
 model StockTransaction {
-  id        Int             @id @default(autoincrement())
-  productId Int
-  product   Product         @relation(fields: [productId], references: [id])
-  type      TransactionType
-  quantity  Int
-  direction Direction
-  note      String?
-  date      DateTime
-  initial   Boolean         @default(false)
-  saleId    Int?
-  sale      Sale?           @relation(fields: [saleId], references: [id])
-  createdAt DateTime        @default(now())
-
-  dailyTransactions DailyTransaction[]
+  id          Int       @id @default(autoincrement())
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id])
+  type        StockType
+  direction   Direction
+  quantity    Int
+  buyingPrice Float
+  note        String
+  date        DateTime
+  saleId      Int?
+  sale        Sale?     @relation(fields: [saleId], references: [id])
+  initial     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
 
   @@map("stock_transaction")
 }
 
+model Sale {
+  id                Int        @id
+  saleDate          DateTime   @default(now())
+  customerId        Int
+  customer          Customer   @relation(fields: [customerId], references: [id])
+  productId         Int
+  product           Product    @relation(fields: [productId], references: [id])
+  quantity          Int        @default(1)
+  buyingPrice       Float      @default(0)
+  sellingPrice      Float      @default(0)
+  returnQuantity    Int        @default(0)
+  returnAmount      Float?     @default(0)
+  saleType          SaleType   @default(INSTALLMENT)
+  discount          Float      @default(0)
+  totalAmount       Float      @default(0)
+  perInstallment    Float      @default(0)
+  totalInstallments Int        @default(10)
+  paidInstallments  Int        @default(0)
+  paidAmount        Float      @default(0)
+  remainingAmount   Float      @default(0)
+  status            SaleStatus @default(ACTIVE)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  installments     Installment[]
+  stockTransaction StockTransaction[]
+
+  @@map("sale")
+}
+
 model Installment {
-  id               Int                @id @default(autoincrement())
-  saleId           Int
-  sale             Sale               @relation(fields: [saleId], references: [id])
-  amount           Float              @default(0)
-  paidDate         DateTime?
-  dueDate          DateTime
-  status           InstallmentStatus  @default(PENDING)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  DailyTransaction DailyTransaction[]
+  id        Int               @id @default(autoincrement())
+  saleId    Int
+  sale      Sale              @relation(fields: [saleId], references: [id])
+  amount    Float             @default(0)
+  paidDate  DateTime?
+  dueDate   DateTime
+  status    InstallmentStatus @default(UPCOMING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 
   @@map("installment")
+}
+
+model Investment {
+  id         Int      @id @default(autoincrement())
+  investor   String
+  investment Float    @default(0)
+  note       String?
+  date       DateTime @unique()
+  createdAt  DateTime @default(now())
+
+  @@map("investment")
+}
+
+model ManualTransaction {
+  id        Int      @id @default(autoincrement())
+  type      CashType
+  amount    Float    @default(0)
+  note      String?
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  @@map("manual_transaction")
+}
+
+model MonthlySummary {
+  id                   Int   @id @default(autoincrement())
+  month                Int
+  year                 Int
+  totalExpense         Float @default(0)
+  totalDebt            Float @default(0)
+  totalBank            Float @default(0)
+  totalCash            Float @default(0)
+  totalInvestment      Float @default(0)
+  totalSales           Float @default(0)
+  costOfStock          Float @default(0)
+  grossProfit          Float @default(0)
+  netProfit            Float @default(0)
+  stockValue           Float @default(0)
+  totalDebtOnCustomers Float @default(0)
+  totalAssetsValue     Float @default(0)
+  totalStockQuantity   Int   @default(0)
+  totalCustomers       Int   @default(0)
+  totalProducts        Int   @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([year, month], name: "year_month")
+  @@map("monthly_summary")
 }

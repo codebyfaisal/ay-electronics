@@ -1,44 +1,42 @@
 import z from "zod";
-import { idSchema } from "./common.schema.js";
+import { dateSchema, idSchema, positiveNumber, saleTypeSchema } from "./common.schema.js";
 
-export const createSaleSchema = z.object({
-    customerId: idSchema,
-    productId: idSchema,
-    saleDate: z.coerce.date({ error: "Sale date is required" }),
-    saleType: z.preprocess(
-        (val) => typeof val === "string" ? val.toUpperCase() : val,
-        z.enum(["CASH", "INSTALLMENT"]).default("CASH")
-    ),
-    paymentMethod: z.preprocess(
-        (val) => typeof val === "string" ? val.toUpperCase() : val,
-        z.enum(["CASH", "BANK"]).default("CASH"),
-        { error: "Payment method is required" }
-    ),
-    quantity: z.coerce.number().min(1, "Quantity must be at least 1").default(1),
-    discount: z.coerce.number().min(0, "Discount must be equal or greater than 0").default(0),
-    paidAmount: z.coerce.number().min(0, "Paid amount must be equal or greater than 0").default(0),
-    downPayment: z.coerce.number().min(0, "Down payment must be equal or greater than 0").default(0),
-    totalInstallments: z.coerce.number().min(0).default(10).optional(),
-});
-
-export const returnSaleSchema = z.object({
-    id: idSchema,
-    date: z.coerce.date({ error: "Return date is required" }),
-    quantity: z.coerce.number().min(1, "Quantity must be at least 1").default(1),
-    refundMethod: z.enum(["CASH", "BANK"]).default("CASH"),
-    note: z.string().default(""),
-})
+export const createSaleSchema = z
+    .object({
+        agreementNo: positiveNumber("Agreement No.", null, 1),
+        customerId: positiveNumber("Customer ID", null, 1),
+        productId: positiveNumber("Product ID", null, 1),
+        saleDate: dateSchema("Sale"),
+        saleType: saleTypeSchema,
+        quantity: positiveNumber("Quantity").default(1),
+        discount: z.coerce.number().min(0, "Discount must be equal or greater than 0").default(0),
+        paidAmount: z.coerce.number().min(0, "Paid amount must be equal or greater than 0").default(0),
+        firstInstallment: z.coerce
+            .number()
+            .min(0, "First installment must be equal or greater than 0")
+            .default(0),
+        totalInstallments: positiveNumber("Total installments", null, 1).default(1),
+    })
+    .refine(
+        (data) =>
+            (data.saleType === "INSTALLMENT" && data.firstInstallment > 0) ||
+            (data.saleType === "CASH" && data.paidAmount > 0),
+        {
+            message:
+                "If saleType is 'INSTALLMENT', firstInstallment will be must; if 'CASH', paidAmount must be greater than 0.",
+            path: ["saleType"],
+        }
+    );
 
 export const installmentSchema = z.object({
     id: idSchema,
-    paymentMethod: z.enum(["CASH", "BANK"]).default("CASH"),
-    amount: z.coerce.number().min(1, "Amount must be greater than 0").optional(),
-    paidDate: z.coerce.date({ error: "Date is required" }),
+    amount: positiveNumber("Installment amount", null, 1).optional(),
+    paidDate: dateSchema("Installment amount"),
 });
 
 export const updateInstallmentSchema = z.object({
     id: idSchema,
-    amount: z.coerce.number().min(1, "Amount must be greater than 0").optional(),
-    paidDate: z.coerce.date().optional(),
+    amount: positiveNumber("Installment amount", null, 1).optional(),
+    paidDate: dateSchema("Installment amount").optional(),
 });
 

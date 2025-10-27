@@ -61,6 +61,10 @@
   }
 }
 
+* {
+  font-family: Poppins, serif;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -84,4 +88,31 @@ input[type="number"] {
   .animate-gradient-move {
     animation: gradient-move 2s linear infinite;
   }
+}
+
+.cursor-not-all,
+.cursor-not-all * {
+  cursor: not-allowed !important;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(20, 20, 30) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.7);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 1);
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }

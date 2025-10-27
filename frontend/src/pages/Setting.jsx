@@ -28,9 +28,7 @@ import {
   Clock,
 } from "lucide-react";
 
-// --- Mock Data and Utility Functions ---
 
-// Placeholder data/utility for a runnable example
 const data = {
   totalInvestment: 1250000,
   totalAssetsValue: 1500000,
@@ -52,7 +50,6 @@ const summaryData = {
   totalStockValue: 875,
 };
 
-// Simplified formatCurrency function
 const formatCurrency = (value) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -61,7 +58,6 @@ const formatCurrency = (value) =>
     maximumFractionDigits: 0,
   }).format(value || 0);
 
-// Base KPI Definitions (with unique 'id' for DND)
 const BASE_KPIS = [
   {
     id: "investment",
@@ -84,7 +80,7 @@ const BASE_KPIS = [
     title: "Net Profit",
     value: formatCurrency(data?.netProfit),
     icon: TrendingUp,
-    color: "text-green-500", // Adjusted for better visibility
+    color: "text-green-500",
     currency: true,
   },
   {
@@ -185,11 +181,6 @@ const BASE_KPIS = [
   },
 ];
 
-// --- Sub-Components ---
-
-/**
- * Draggable and Sortable KPI Card Component
- */
 const SortableKPI = ({ kpi }) => {
   const {
     attributes,
@@ -203,8 +194,8 @@ const SortableKPI = ({ kpi }) => {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 10 : 1, // Keep dragging card on top
-    cursor: "grab", // Indicate a draggable element
+    zIndex: isDragging ? 10 : 1,
+    cursor: "grab",
   };
 
   const Icon = kpi.icon;
@@ -232,51 +223,39 @@ const SortableKPI = ({ kpi }) => {
   );
 };
 
-/**
- * Main KPI Dashboard Component
- */
 const KPIDashboard = () => {
   const LOCAL_STORAGE_KEY = "kpiOrder";
 
-  // 1. Initial State: Load order from localStorage or use default
   const [kpis, setKpis] = useState([]);
   
   useEffect(() => {
-    // Get the saved order (an array of IDs) from localStorage
     const savedOrderJson = localStorage.getItem(LOCAL_STORAGE_KEY);
     
     if (savedOrderJson) {
       try {
         const savedOrder = JSON.parse(savedOrderJson);
         
-        // Create an ID map for quick lookup of the original KPI objects
         const kpiMap = BASE_KPIS.reduce((acc, kpi) => {
           acc[kpi.id] = kpi;
           return acc;
         }, {});
-        
-        // Reconstruct the array in the saved order, filtering out any old/missing KPIs
-        // and adding any new ones to the end.
         const reorderedKpis = savedOrder
           .map(id => kpiMap[id])
-          .filter(kpi => kpi); // Filter out undefined if an ID is no longer in BASE_KPIS
-
-        // Identify new KPIs not in the saved order and add them to the end
-        const existingIds = new Set(reorderedKpis.map(k => k.id));
+          .filter(kpi => kpi);
+          const existingIds = new Set(reorderedKpis.map(k => k.id));
         const newKpis = BASE_KPIS.filter(kpi => !existingIds.has(kpi.id));
 
         setKpis([...reorderedKpis, ...newKpis]);
 
       } catch (e) {
         console.error("Could not parse saved KPI order:", e);
-        setKpis(BASE_KPIS); // Fallback to default
+        setKpis(BASE_KPIS); 
       }
     } else {
-      setKpis(BASE_KPIS); // Use default if nothing is saved
+      setKpis(BASE_KPIS);
     }
-  }, []); // Run only once on mount
-
-  // 2. Persist Order: Save the current order to localStorage whenever `kpis` changes
+  }, []); 
+  
   useEffect(() => {
     if (kpis.length > 0) {
       const currentOrderIds = kpis.map((kpi) => kpi.id);
@@ -284,16 +263,14 @@ const KPIDashboard = () => {
     }
   }, [kpis]);
 
-  // Use a pointer sensor to enable drag on touch devices and desktop
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Start drag only after moving 8px
+        distance: 8,
       },
     })
   );
 
-  // 3. Handle Drag End
   const handleDragEnd = (event) => {
     const { active, over } = event;
 
@@ -302,13 +279,11 @@ const KPIDashboard = () => {
         const oldIndex = items.findIndex((kpi) => kpi.id === active.id);
         const newIndex = items.findIndex((kpi) => kpi.id === over.id);
 
-        // Utility to move an item in an array
         return arrayMove(items, oldIndex, newIndex);
       });
     }
   };
 
-  // Extract IDs for SortableContext
   const kpiIds = useMemo(() => kpis.map(kpi => kpi.id), [kpis]);
 
   return (

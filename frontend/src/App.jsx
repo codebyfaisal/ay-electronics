@@ -151,7 +151,8 @@ const App = () =>
   <Router>
     <Toaster position="top-right" />
     <Routes>
-      <Route path="/" element={<ErrorBoundary><MainLayout /></ErrorBoundary>}>
+      <Route path="/" element={<MainLayout />}>
+      {/* <Route path="/" element={<ErrorBoundary><MainLayout /></ErrorBoundary>}> */}
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/finance" element={<Finance />} />

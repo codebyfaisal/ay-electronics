@@ -1,10 +1,10 @@
+// /..\backend\src\services\investment.service.js
 import prisma from "../db/prisma.js";
 import dayjs from "dayjs";
 import AppError from "../utils/error.util.js";
 
 export const getInvestments = async (where, { page, limit }) => {
     const { startDate, endDate, ...otherFilters } = where;
-
     let dateRangeCondition = {};
 
     if (startDate && endDate)
@@ -18,7 +18,6 @@ export const getInvestments = async (where, { page, limit }) => {
         dateRangeCondition = { date: { gte: new Date(startDate) } };
     else if
         (endDate) dateRangeCondition = { date: { lte: new Date(endDate) } };
-
     const finalWhere = {
         ...otherFilters,
         ...dateRangeCondition,
@@ -36,7 +35,7 @@ export const getInvestments = async (where, { page, limit }) => {
             where: finalWhere,
         });
 
-        return {
+            return {
             investments,
             total,
         }
@@ -62,18 +61,6 @@ export const createInvestment = async (data, next) => {
             return next(new AppError(`Investment for ${dayjs(date).format("MMM")} ${currentInvYear} already exists.`, 400));
 
         const investment = await tx.investment.create({ data });
-
-        await tx.dailyTransaction.create({
-            data: {
-                date,
-                type: "CASH",
-                amount: investment.investment,
-                note: `Investment for ${dayjs(date).format("MMM")} ${currentInvYear}`,
-                direction: "IN",
-                investmentId: investment.id
-            },
-        });
-
         return investment
     })
 }
@@ -83,13 +70,6 @@ export const updateInvestment = async (data) => {
         const investment = await tx.investment.update({
             where: { id: data.id },
             data
-        });
-
-        await tx.dailyTransaction.updateMany({
-            where: { investmentId: data.id },
-            data: {
-                amount: data.investment
-            }
         });
 
         const message = `Investment for ${dayjs(investment.date).format("MMM")} ${dayjs(investment.date).format("YYYY")} updated successfully.`;

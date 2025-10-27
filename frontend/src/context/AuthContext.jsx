@@ -7,7 +7,7 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
-const AUTH_KEY = 'auth_token'; // Key for the authentication token
+const AUTH_KEY = 'auth_token';
 
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(sessionStorage.getItem(AUTH_KEY));

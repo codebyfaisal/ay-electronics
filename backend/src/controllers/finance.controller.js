@@ -1,7 +1,7 @@
 import { createDailyTransactionSchema, createInvestmentSchema, getSummarySchema, updateDailyTransactionSchema, updateInvestmentSchema } from "../schemas/finance.schema.js";
 import { createInvestment, deleteInvestment, getInvestments, updateInvestment } from "../services/investment.service.js";
 import { createDailyTransaction, deleteDailyTransaction, getDailyTransactions, updateDailyTransaction } from "../services/dailyTransaction.service.js";
-import { deleteSummary, generateDashboardSummary, generateSummary, getSummaries } from "../services/summary.service.js";
+import { deleteSummary, getSummary, getSummaries } from "../services/summary.service.js";
 import { createHandler, deleteHandler, getManyHandler, updateHandler } from "./generic.controller.js";
 import { idSchema } from "../schemas/common.schema.js";
 
@@ -61,15 +61,9 @@ export const handleGetSummaries = getManyHandler(
 
 export const handleGetSummary = updateHandler(
     getSummarySchema,
-    generateDashboardSummary,
+    getSummary,
     monthly
 )
-
-export const handleCreateSummary = createHandler(
-    getSummarySchema,
-    generateSummary,
-    monthly
-);
 
 export const handleDeleteSummary = deleteHandler(
     idSchema,

@@ -101,7 +101,7 @@ const ProductNew = () => {
         <h1 className="text-3xl font-bold">Add New Product</h1>
       </div>
 
-      <div className="bg-[rgb(var(--bg))] p-8 rounded-md shadow-md border border-[rgb(var(--border))] max-w-5xl mx-auto">
+      <div className="bg-[rgb(var(--bg))] p-8 rounded-md shadow-md border border-[rgb(var(--border))]">
         <form onSubmit={handleSubmit} className="space-y-6">
           <h2 className="text-xl font-semibold flex items-center mb-4 border-b pb-2">
             <PackagePlus className="w-5 h-5 mr-2 text-[rgb(var(--primary))]" />{" "}

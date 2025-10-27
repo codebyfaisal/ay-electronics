@@ -19,12 +19,7 @@ const SaleDetail = () => {
   const [paidDate, setPaidDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  // const [returnQuantity, setReturnQuantity] = useState("");
-  // const [returnNote, setReturnNote] = useState("");
-  // const [returnDate, setReturnDate] = useState("");
-  // const [refundMethod] = useState("CASH");
-  // const [paymentMethod, setPaymentMethod] = useState("CASH");
-
+  
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [installmentToEdit, setInstallmentToEdit] = useState(null);
 
@@ -58,28 +53,6 @@ const SaleDetail = () => {
     }
   };
 
-  // -------- RETURN SALE HANDLER ----------
-  // const handleReturnSale = async (e) => {
-  //   e.preventDefault();
-  //   const confirm = window.confirm("Are you sure you want to return this sale?");
-  //   if (!confirm) return;
-
-  //   const data = {
-  //     quantity: Number(returnQuantity),
-  //     date: returnDate,
-  //     refundMethod: refundMethod.toUpperCase(),
-  //     note: returnNote.trim(),
-  //   };
-
-  //   const result = await put(`/sales/${saleId}/return`, data,
-  //     { message: "Sale returned successfully" });
-
-  //   if (result) {
-  //     setReturnQuantity("");
-  //     setReturnNote("");
-  //     refetch();
-  //   }
-  // };
 
   // -------- EDIT INSTALLMENT HANDLERS ----------
   const handleEditInstallment = (installment) => {
@@ -93,7 +66,6 @@ const SaleDetail = () => {
 
   const handleUpdateInstallment = async (updatedData) => {
     setEditLoading(true);
-    // try {
     const result = await put(`/sales/installments/${updatedData.id}`,
       {
         amount: updatedData.amount,
@@ -107,11 +79,7 @@ const SaleDetail = () => {
       setInstallmentToEdit(null);
       refetch();
     }
-    // } catch (e) {
-    //   console.error(e);
-    // } finally {
     setEditLoading(false);
-    // }
   };
 
   const installmentEditFields = [
@@ -148,8 +116,8 @@ const SaleDetail = () => {
 
   if (!sale) return <div className="text-center p-4">Sale not found.</div>;
 
-  const nextPendingInstallment = sale.installments?.find(
-    (i) => i.status === "PENDING"
+  const nextUpcomingInstallment = sale?.installments?.find(
+    (i) => i.status === "UPCOMING"
   );
 
   return (
@@ -173,18 +141,18 @@ const SaleDetail = () => {
               <h2 className="text-xl font-semibold mb-3 border-b pb-2">
                 Summary
               </h2>
-              <DetailItem label="Sale ID" value={sale.id} />
+              <DetailItem label="Agreement No" value={sale?.id} />
               <DetailItem
                 label="Sale Date"
-                value={new Date(sale.saleDate).toLocaleDateString()}
+                value={new Date(sale?.saleDate).toLocaleDateString()}
               />
               <DetailItem
                 label="Status"
-                value={<StatusBadge status={sale.status} />}
+                value={<StatusBadge status={sale?.status} />}
               />
               <DetailItem
                 label="Sale Type"
-                value={sale.saleType}
+                value={sale?.saleType}
               />
             </div>
 
@@ -193,16 +161,15 @@ const SaleDetail = () => {
               <h2 className="text-xl font-semibold mb-3 border-b pb-2">
                 Customer
               </h2>
-              <DetailItem label="ID" value={sale.customer.id} />
               <DetailItem
                 label="Name"
-                value={sale.customer.name}
+                value={sale?.customer?.name}
                 className="capitalize"
-                onClick={() => navigate(`/customers/${sale.customer.id}`)}
+                onClick={() => navigate(`/customers/${sale?.customer?.id}`)}
               />
-              <DetailItem label="CNIC" value={sale.customer.cnic} />
-              <DetailItem label="Phone" value={sale.customer.phone} />
-              <DetailItem label="Address" value={sale.customer.address} />
+              <DetailItem label="CNIC" value={sale?.customer?.cnic} />
+              <DetailItem label="Phone" value={sale?.customer?.phone} />
+              <DetailItem label="Address" value={sale?.customer?.address} />
             </div>
           </div>
 
@@ -214,69 +181,69 @@ const SaleDetail = () => {
               </h2>
               <DetailItem
                 label="Product"
-                value={sale.product.name}
+                value={sale?.product.name}
                 className="capitalize"
-                onClick={() => navigate(`/products/${sale.product.id}`)}
+                onClick={() => navigate(`/products/${sale?.product.id}`)}
               />
-              <DetailItem label="Category" value={sale.product.category} className="capitalize" />
-              <DetailItem label="Brand" className="capitalize" value={sale.product.brand} />
+              <DetailItem label="Category" value={sale?.product.category} className="capitalize" />
+              <DetailItem label="Brand" className="capitalize" value={sale?.product.brand} />
+              <DetailItem label="Sold Quantity" value={sale?.quantity + " unit"} />
               <DetailItem
                 label="Original Price" currency={true}
-                value={Number(sale.product.buyingPrice).toLocaleString()}
+                value={Number(sale?.buyingPrice).toLocaleString()}
               />
               <DetailItem
                 label="Selling Price" currency={true}
-                value={Number(sale.product.sellingPrice).toLocaleString()}
+                value={Number(sale?.product.sellingPrice).toLocaleString()}
               />
-              <DetailItem label="Sold Quantity" value={sale.quantity} />
             </div>
 
-            <div>
+            <div className="flex flex-col">
               <h2 className="text-xl font-semibold mb-3 border-b pb-2">
                 Payment
               </h2>
-              <DetailItem
-                label="Total Price"
-                value={Number(sale.totalAmount).toLocaleString()}
-                currency={true}
-              />
-              <DetailItem label="Down Payment" value={sale.downPayment} />
-              <DetailItem label="Discount" value={sale.discount} />
-              <DetailItem
-                label="Paid Amount"
-                value={Number(sale.paidAmount).toLocaleString()}
-                currency={true}
-              />
-              <DetailItem label="Payment Method" value={sale.paymentMethod} />
-              <DetailItem
-                label="Remaining"
-                value={Number(sale.remainingAmount).toLocaleString()}
-                className="text-[rgb(var(--error))] font-bold"
-                currency={true}
-              />
+              <div className="flex flex-col flex-1 justify-end">
+                <DetailItem
+                  label="Total Amount"
+                  value={Number(sale?.totalAmount).toLocaleString()}
+                  currency={true}
+                />
+                <DetailItem label="Discount" value={sale?.discount} />
+                <DetailItem
+                  label="Paid Amount"
+                  value={Number(sale?.paidAmount).toLocaleString()}
+                  currency={true}
+                />
+                <DetailItem
+                  label="Remaining"
+                  value={Number(sale?.remainingAmount).toLocaleString()}
+                  className="text-[rgb(var(--error))] font-bold"
+                  currency={true}
+                />
+              </div>
             </div>
           </div>
 
           {/* Product + Payment Info */}
-          {(sale.status === "PARTIAL" || sale.status === "RETURNED") && (
+          {(sale?.status === "PARTIAL" || sale?.status === "RETURNED") && (
             <div className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))]">
               <h2 className="text-xl font-semibold mb-3 border-b pb-2">
                 Return
               </h2>
               <div className="grid grid-cols-2 gap-4">
-                <DetailItem label="Return Quantity" value={sale.returnQuantity} className="text-red-500" />
-                <DetailItem label="Refund Amount" value={sale.returnAmount} />
+                <DetailItem label="Return Quantity" value={sale?.returnQuantity} className="text-red-500" />
+                <DetailItem label="Refund Amount" value={sale?.returnAmount} />
               </div>
             </div>
           )}
 
           {/* Installment Table */}
-          {sale.saleType === "INSTALLMENT" && (
-            <div className={`bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] ${sale.status === "RETURNED" ? "opacity-70 cursor-not-allowed" : ""}`}>
+          {sale?.saleType === "INSTALLMENT" && (
+            <div className={`bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] ${sale?.status === "RETURNED" ? "opacity-70 cursor-not-allowed" : ""}`}>
               <div className="flex justify-between items-center mb-4 border-b pb-2">
                 <h2 className="text-xl font-semibold">Installments</h2>
                 <span className="text-md">
-                  ({sale.paidInstallments} out of {sale.totalInstallments} remaining)
+                  ({(Number(sale?.totalInstallments) - Number(sale?.paidInstallments)).toLocaleString()} out of {sale?.totalInstallments} remaining)
                 </span>
               </div>
 
@@ -297,10 +264,10 @@ const SaleDetail = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[rgb(var(--border))]">
-                    {sale.installments.map((i, ix) => (
+                    {sale?.installments.map((i, ix) => (
                       <tr
                         key={i.id}
-                        className="hover:bg-[rgb(var(--bg-secondary))]"
+                        className={`hover:bg-[rgb(var(--bg-secondary))] ${i.status !== "PAID" || sale?.status === "RETURNED" || loading ? "opacity-70 cursor-not-all" : ""}`}
                       >
                         <td className="px-6 py-3 whitespace-nowrap text-sm">
                           {++ix}.
@@ -325,7 +292,7 @@ const SaleDetail = () => {
                             variant="ghost"
                             className="text-[rgb(var(--primary))] p-1"
                             onClick={() => handleEditInstallment(i)}
-                            disabled={i.status !== "PAID" || sale.status === "RETURNED" || loading}
+                            disabled={i.status !== "PAID" || sale?.status === "RETURNED" || loading}
                             loading={i.id === installmentToEdit?.id && editLoading}
                             title={
                               i.status !== "PAID"
@@ -349,7 +316,7 @@ const SaleDetail = () => {
         <div className="lg:col-span-1">
           <div className="space-y-6 sticky top-19.5">
             {/* Installment Payment Form */}
-            {sale.saleType === "INSTALLMENT" && (
+            {sale?.saleType === "INSTALLMENT" && (
               <form
                 onSubmit={handlePayInstallment}
                 className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] space-y-4"
@@ -358,7 +325,7 @@ const SaleDetail = () => {
                   <CreditCard className="w-5 h-5 mr-2" /> Pay Next Installment
                 </h2>
 
-                {sale.status === "COMPLETED" && (
+                {sale?.status === "COMPLETED" && (
                   <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded text-sm text-green-700 dark:text-green-300">
                     This sale is fully COMPLETED.
                   </div>
@@ -366,7 +333,7 @@ const SaleDetail = () => {
 
                 <Input
                   label={`Next Due Amount (Approx: ${Number(
-                    nextPendingInstallment?.amount
+                    nextUpcomingInstallment?.amount
                   ).toLocaleString()})`}
                   id="installmentAmount"
                   type="number"
@@ -374,7 +341,7 @@ const SaleDetail = () => {
                   value={installmentAmount}
                   onChange={(e) => setInstallmentAmount(e.target.value)}
                   required
-                  disabled={sale.status === "COMPLETED" || sale.status === "RETURNED" || loading}
+                  disabled={sale?.status === "COMPLETED" || sale?.status === "RETURNED" || loading}
                   currency={true}
                   min={0.01}
                   max={sale?.remainingAmount}
@@ -388,7 +355,7 @@ const SaleDetail = () => {
                   value={paidDate}
                   onChange={(e) => setPaidDate(e.target.value)}
                   required
-                  disabled={sale.status === "COMPLETED" || sale.status === "RETURNED" || loading}
+                  disabled={sale?.status === "COMPLETED" || sale?.status === "RETURNED" || loading}
                 />
 
                 <Button
@@ -396,7 +363,7 @@ const SaleDetail = () => {
                   variant="primary"
                   loading={payLoading}
                   className="w-full"
-                  disabled={sale.status === "COMPLETED" || sale.status === "RETURNED" || loading}
+                  disabled={sale?.status === "COMPLETED" || sale?.status === "RETURNED" || loading}
                 >
                   <DollarSign className="w-5 h-5 mr-2" />
                   {payLoading ? "Processing..." : "Add Installment"}
@@ -413,7 +380,7 @@ const SaleDetail = () => {
                 <DollarSign className="w-5 h-5 mr-2 text-red-500" /> Return Sale
               </h2>
 
-              {sale.status === "RETURNED" && (
+              {sale?.status === "RETURNED" && (
                 <div className="bg-red-100 dark:bg-red-900/50 p-3 rounded text-sm text-red-700 dark:text-red-300">
                   This sale has already been returned.
                 </div>
@@ -427,10 +394,10 @@ const SaleDetail = () => {
                 value={returnQuantity}
                 onChange={(e) => setReturnQuantity(e.target.value)}
                 required
-                disabled={sale.status === "RETURNED" || loading}
+                disabled={sale?.status === "RETURNED" || loading}
                 min={1}
                 step="1"
-                max={sale.quantity}
+                max={sale?.quantity}
               />
 
               <Select
@@ -439,7 +406,7 @@ const SaleDetail = () => {
                 value={refundMethod}
                 onChange={(e) => setRefundMethod(e.target.value)}
                 required
-                disabled={sale.status === "RETURNED" || loading}
+                disabled={sale?.status === "RETURNED" || loading}
                 options={[
                   { value: "CASH", label: "Cash" },
                   { value: "BANK", label: "Bank" },
@@ -453,7 +420,7 @@ const SaleDetail = () => {
                 value={returnDate}
                 onChange={(e) => setReturnDate(e.target.value)}
                 required
-                disabled={sale.status === "RETURNED" || loading}
+                disabled={sale?.status === "RETURNED" || loading}
                 min={new Date(sale?.saleDate).toISOString().split("T")[0]}
                 max={new Date().toISOString().split("T")[0]}
               />
@@ -466,7 +433,7 @@ const SaleDetail = () => {
                 value={returnNote}
                 onChange={(e) => setReturnNote(e.target.value)}
                 required
-                disabled={sale.status === "RETURNED" || loading}
+                disabled={sale?.status === "RETURNED" || loading}
               />
 
               <Button
@@ -474,7 +441,7 @@ const SaleDetail = () => {
                 variant="destructive"
                 loading={payLoading}
                 className="w-full"
-                disabled={sale.status === "RETURNED" || loading}
+                disabled={sale?.status === "RETURNED" || loading}
               >
                 <DollarSign className="w-5 h-5 mr-2" />
                 {payLoading ? "Processing..." : "Submit Return"}

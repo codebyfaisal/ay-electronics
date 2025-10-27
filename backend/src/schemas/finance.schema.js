@@ -1,15 +1,12 @@
 import z from "zod";
-import { cashFlowSchema, directionSchema, idSchema, positiveNumber } from "./common.schema.js";
+import { cashFlowSchema, dateSchema, directionSchema, idSchema, monthYearSchema, noteSchema, positiveNumber } from "./common.schema.js";
 
-export const getInvestmentsSchema = z.object({
-    month: z.coerce.number().optional(),
-    year: z.coerce.number().optional(),
-});
+export const getInvestmentsSchema = monthYearSchema("Investments");
 
 export const createInvestmentSchema = z.object({
     investor: z.string({ error: "Investor name is required" }),
     investment: positiveNumber("Investment amount"),
-    date: z.coerce.date({ error: "Investment Date is required" }),
+    date: dateSchema("Investment"),
     note: z.string().default(""),
 });
 
@@ -17,16 +14,15 @@ export const updateInvestmentSchema = z.object({
     id: idSchema,
     investor: z.string().optional(),
     investment: positiveNumber("Investment amount").optional(),
-    date: z.coerce.date().optional(),
-    note: z.string().optional(),
+    date: dateSchema("Investment").optional(),
+    note: noteSchema.optional(),
 });
 
 export const createDailyTransactionSchema = z.object({
     type: cashFlowSchema,
-    direction: directionSchema,
     amount: positiveNumber("Amount"),
-    note: z.string().default("-"),
-    date: z.coerce.date({ error: "Date is required" }),
+    note: noteSchema.default(""),
+    date: dateSchema("Transaction"),
 });
 
 export const updateDailyTransactionSchema = z.object({
@@ -34,25 +30,8 @@ export const updateDailyTransactionSchema = z.object({
     type: cashFlowSchema.optional(),
     direction: directionSchema.optional(),
     amount: positiveNumber("Amount").optional(),
-    note: z.string().optional(),
-    date: z.coerce.date().optional(),
+    note: noteSchema.optional(),
+    date: dateSchema("Transaction").optional(),
 });
 
-export const getSummarySchema = z.object({
-    startM: z.coerce
-        .number({ error: "Start Month is required and must be between 1 and 12" })
-        .min(1, "Start Month must be between 1 and 12")
-        .max(12, "Start Month must be between 1 and 12").optional(),
-    startY: z.coerce
-        .number({ error: "Start Year is required" })
-        .max(new Date().getFullYear(), "Year cannot be in the future").optional(),
-    endM: z.coerce
-        .number({ error: "End Month is required and must be between 1 and 12" })
-        .min(1, "End Month must be between 1 and 12")
-        .max(12, "End Month must be between 1 and 12")
-        .optional(),
-    endY: z.coerce
-        .number({ error: "End Year is required" })
-        .max(new Date().getFullYear(), "Year cannot be in the future")
-        .optional(),
-});
+export const getSummarySchema = monthYearSchema("Summary");

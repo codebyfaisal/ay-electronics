@@ -15,7 +15,6 @@ const Button = ({
     "px-2.5 py-2 rounded-md font-semibold transition-all duration-300 flex items-center justify-center space-x-2 cursor-pointer";
   let variantStyles = "";
 
-  // Define styles based on the variant
   switch (variant) {
     case "primary":
       variantStyles =
@@ -37,7 +36,6 @@ const Button = ({
       variantStyles = "bg-[rgb(var(--primary))] text-white hover:bg-[rgb(var(--color-primary))]";
   }
 
-  // Handle disabled/loading states
   if (disabled || loading) variantStyles += " opacity-60 cursor-not-allowed";
   else variantStyles += " active:scale-[0.98]";
 

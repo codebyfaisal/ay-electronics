@@ -15,11 +15,6 @@ const transactionTypes = [
   { label: "Cash", value: "CASH" },
 ];
 
-const directions = [
-  { label: "IN", value: "IN" },
-  { label: "OUT", value: "OUT" },
-];
-
 const initialForm = {
   id: null,
   type: "EXPENSE",
@@ -61,8 +56,6 @@ const DailyTransactionsTab = () => {
 
   const transactions = transactionsData?.dailyTransactions || [];
   const total = transactionsData?.total || 0;
-
-  console.log(transactions);
 
   const handleSaveTransaction = async (data) => {
     const isNew = !data.id;
@@ -156,13 +149,6 @@ const DailyTransactionsTab = () => {
       options: transactionTypes
     },
     {
-      key: 'direction',
-      label: 'Direction (In/Out)',
-      type: 'select',
-      required: true,
-      options: directions
-    },
-    {
       key: 'amount',
       label: 'Amount',
       type: 'number',
@@ -205,10 +191,6 @@ const DailyTransactionsTab = () => {
         render: (row) => Number(row.amount).toLocaleString(),
       },
       { header: "Type", accessor: "type" },
-      {
-        header: "Direction", accessor: "direction",
-        render: (row) => <StatusBadge status={row.direction} />
-      },
       {
         header: "Date",
         accessor: "date",

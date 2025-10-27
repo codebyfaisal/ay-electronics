@@ -5,6 +5,9 @@ import useFetch from "../hooks/useFetch";
 import Spinner from "../components/Spinner";
 import Button from "../components/ui/Button";
 import Table from "../components/Table";
+import EditModal from "../components/EditModal";
+import useApi from "../utils/useApi";
+import { showError } from "../utils/toast";
 import {
     ArrowLeft,
     Package,
@@ -13,27 +16,83 @@ import {
     Box,
     ChevronDown,
     ChevronUp,
+    PackagePlus,
+    Plus,
 } from "lucide-react";
 import formatCurrency from "../utils/formatCurrency";
-import useApi from "../utils/useApi";
 
-const DetailItem = ({ label, value, className = "" }) => (
+const STOCK_TYPES = [
+    { label: "Purchase (IN)", value: "PURCHASE" },
+    { label: "Supplier Return (OUT)", value: "SUPPLIER_RETURN" },
+];
+
+const DetailItem = ({ label, value, className = "", currency = false }) => (
     <div
         className={`flex justify-between items-center py-1 border-b border-[rgb(var(--bg-secondary))] last:border-b-0 ${className}`}
     >
         <p className="w-1/2 text-sm text-gray-500 dark:text-gray-400">{label}:</p>
         <p className="w-1/2 text-right font-medium text-[rgb(var(--text))]">
             {value}
+            {currency && <span className="ml-1 text-[0.7rem]">PKR</span>}
         </p>
     </div>
 );
+
+const ADD_STOCK_FIELDS = (product) => [
+    {
+        label: "Transaction Type",
+        key: "type",
+        type: "select",
+        required: true,
+        options: STOCK_TYPES,
+    },
+    {
+        label: "Buying Price (Unit)",
+        key: "buyingPrice",
+        type: "number",
+        required: true,
+        rest: { min: 1, step: "1" },
+    },
+    {
+        label: "Quantity",
+        key: "stockQuantity",
+        type: "number",
+        required: true,
+        rest: { min: 1, step: "1" },
+    },
+    {
+        label: "Transaction Date",
+        key: "date",
+        type: "date",
+        required: true,
+        rest: {
+            min: product?.initialStockDate ? new Date(product.initialStockDate).toISOString().split("T")[0] : undefined,
+            max: new Date().toISOString().split("T")[0],
+        }
+    },
+    {
+        label: "Note (Optional)",
+        key: "note",
+        type: "text",
+        required: false,
+    },
+];
+
+const getInitialStockData = () => ({
+    stockQuantity: 1,
+    note: "",
+    date: new Date().toISOString().split("T")[0],
+    type: "PURCHASE",
+});
+
 
 const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const productId = Number(id);
     const [showTransactions, setShowTransactions] = useState(false);
-    const { del } = useApi();
+    const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
+    const { del, post, loading: stockLoading } = useApi();
 
     const [transactionPage, setTransactionPage] = useState(1);
     const TRANSACTION_LIMIT = 5;
@@ -41,6 +100,7 @@ const ProductDetail = () => {
         data: productReport,
         loading: reportLoading,
         error: reportError,
+        refetch: refetchReport,
     } = useFetch(`/products/${productId}`, {}, true);
 
     const transactionApiUrl = useMemo(() => {
@@ -48,11 +108,17 @@ const ProductDetail = () => {
     }, [productId, transactionPage]);
 
     const {
-        refetch,
+        refetch: refetchTransactions,
         data: transactionsData,
         loading: transactionsLoading,
         error: transactionsError,
     } = useFetch(transactionApiUrl, {}, true);
+
+    const handleRefetchAll = () => {
+        refetchReport();
+        refetchTransactions();
+    }
+
 
     const productTransactions = transactionsData?.stockTransactions || [];
     const totalTransactions = transactionsData?.total || 0;
@@ -75,7 +141,7 @@ const ProductDetail = () => {
                     const result = await del(`/products/stocks/${id}`,
                         { message: "Product deleted successfully" }
                     );
-                    if (result !== null) refetch();
+                    if (result !== null) handleRefetchAll();
                 }
                 break;
             default:
@@ -83,6 +149,37 @@ const ProductDetail = () => {
         }
     };
 
+    const handleAddStockSubmit = async (formData) => {
+        const [rawType, direction] = formData.type.split("_");
+
+        const data = {
+            id: productOverview?.id,
+            stockQuantity: Number(formData.stockQuantity),
+            note: formData.note,
+            date: new Date(formData.date).toISOString(),
+            type: rawType,
+            direction,
+            buyingPrice: Number(formData.buyingPrice),
+        };
+
+
+
+        if (data.stockQuantity <= 0) {
+            showError("Quantity must be greater than 0.");
+            return;
+        }
+
+        const result = await post(
+            `/products/${productOverview?.id}/stocks`,
+            data,
+            { message: "Stock updated successfully" }
+        );
+
+        if (result) {
+            setIsAddStockModalOpen(false);
+            handleRefetchAll();
+        }
+    };
 
     const hasReportData = !!productReport;
 
@@ -99,14 +196,20 @@ const ProductDetail = () => {
         () => [
             { header: "Type", accessor: "type" },
             {
-                header: "Quantity",
-                accessor: "quantity",
-                render: (row) => `${row.quantity} units`,
-            },
-            {
                 header: "Direction",
                 accessor: "direction",
                 render: (row) => renderDirection(row.direction),
+            },
+            {
+                header: "Quantity",
+                accessor: "quantity",
+                render: (row) => `${row.quantity} Units`,
+            },
+            {
+                header: "Buying Price",
+                accessor: "buyingPrice",
+                render: (row) => formatCurrency(row.buyingPrice),
+                currency: true,
             },
             {
                 header: "Transaction Date",
@@ -126,7 +229,10 @@ const ProductDetail = () => {
         );
 
     if (loading && !hasReportData)
-        return <Spinner overlay={false} />;
+        return (
+            <div className="flex justify-center items-center w-full h-full">
+                <Spinner overlay={false} />
+            </div>)
 
     if (!hasReportData)
         return <div className="text-center p-4">Product not found.</div>;
@@ -153,13 +259,16 @@ const ProductDetail = () => {
 
                 <Button
                     variant="primary"
-                    onClick={() => navigate(`/products/edit/${productId}`)}
+                    onClick={() => setIsAddStockModalOpen(true)} // 👈 Open Modal
                 >
+                    <PackagePlus className="w-5 h-5 mr-2" />
                     Add Stock
                 </Button>
             </div>
 
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
                 <div className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] space-y-4 lg:col-span-1">
                     <h2 className="text-xl font-semibold mb-4 flex items-center border-b pb-2">
                         <Package className="w-5 h-5 mr-2 text-[rgb(var(--primary))]" />{" "}
@@ -175,16 +284,19 @@ const ProductDetail = () => {
                     <DetailItem
                         label="Buying Price (Unit)"
                         value={formatCurrency(productOverview?.buyingPrice)}
+                        currency
                     />
                     <DetailItem
                         label="Selling Price (Unit)"
                         value={formatCurrency(productOverview?.sellingPrice)}
+                        currency
                     />
                     <DetailItem
                         label="Added at"
                         value={new Date(productOverview?.initialStockDate).toLocaleDateString()}
                     />
                 </div>
+
 
                 <div className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] space-y-4 lg:col-span-1">
                     <h2 className="text-xl font-semibold mb-4 flex items-center border-b pb-2">
@@ -198,6 +310,7 @@ const ProductDetail = () => {
                     <DetailItem
                         label="Total Purchase Cost"
                         value={formatCurrency(inventorySummary?.totalPurchaseCost)}
+                        currency
                     />
                     {/* <DetailItem
                         label="Product Returns (In)"
@@ -210,8 +323,10 @@ const ProductDetail = () => {
                     <DetailItem
                         label="Expected Stock Value"
                         value={formatCurrency(inventorySummary?.expectedStockValue)}
+                        currency
                     />
                 </div>
+
 
                 <div className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))] space-y-4 lg:col-span-1">
                     <h2 className="text-xl font-semibold mb-4 flex items-center border-b pb-2">
@@ -229,10 +344,12 @@ const ProductDetail = () => {
                     <DetailItem
                         label="Total Revenue"
                         value={formatCurrency(salesSummary?.totalRevenue)}
+                        currency
                     />
                     <DetailItem
                         label="Total Discount Given"
                         value={formatCurrency(salesSummary?.totalDiscount)}
+                        currency
                     />
                     <DetailItem
                         label="Completed Sales"
@@ -245,6 +362,7 @@ const ProductDetail = () => {
                 </div>
             </div>
 
+
             <div className="bg-[rgb(var(--bg))] p-6 rounded-md shadow-md border border-[rgb(var(--border))]">
                 <button
                     onClick={() => setShowTransactions(!showTransactions)}
@@ -254,19 +372,13 @@ const ProductDetail = () => {
                         <Box className="w-6 h-6 mr-3" /> Stock Movement History (
                         {totalTransactions})
                     </div>
-                    {showTransactions ? (
-                        <ChevronUp className="w-5 h-5" />
-                    ) : (
-                        <ChevronDown className="w-5 h-5" />
-                    )}
+                    <ChevronDown className={`w-5 h-5 transition duration-300 ${showTransactions ? "rotate-180" : ""}`} />
                 </button>
 
-                <div
-                    className={`mt-4 overflow-hidden transition-all duration-300 ${showTransactions
-                        ? "max-h-[1000px] pt-4 border-t border-[rgb(var(--border))]"
-                        : "max-h-0"
-                        }`}
-                >
+                <div className={`mt-4 overflow-hidden transition-all duration-300 ${showTransactions
+                    ? "max-h-[1000px] pt-4 border-t border-[rgb(var(--border))]"
+                    : "max-h-0"
+                    }`} >
                     <div className="relative">
                         <Table
                             data={productTransactions}
@@ -288,6 +400,18 @@ const ProductDetail = () => {
                     </div>
                 </div>
             </div>
+
+
+            <EditModal
+                isOpen={isAddStockModalOpen}
+                title="Add Stock / Record Return"
+                initialData={getInitialStockData(productOverview)}
+                fields={ADD_STOCK_FIELDS(productOverview)}
+                onClose={() => setIsAddStockModalOpen(false)}
+                onSave={handleAddStockSubmit}
+                loading={stockLoading}
+            />
+
         </div>
     );
 };

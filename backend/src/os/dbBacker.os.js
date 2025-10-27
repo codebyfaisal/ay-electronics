@@ -6,7 +6,6 @@ const DB_FILE_NAME = "app.db";
 const BACKUP_DIR_NAME = "backup";
 const APP_FOLDER_NAME = "ay-app";
 
-// --- 1. CONFIG READERS (UNCHANGED) ---
 export function readAppConfig() {
     const appConfigFile = path.join(process.cwd(), "config", CONFIG_FILE_NAME);
     if (fs.existsSync(appConfigFile)) {
@@ -30,7 +29,6 @@ export function updateEnvironment(key) {
     process.env[envKey] = envValue;
 }
 
-// --- 2. CORE BACKUP FUNCTION ---
 export function performDbBackup(backupDriveLetter) {
     if (!backupDriveLetter) return false;
 
@@ -59,7 +57,6 @@ export function performDbBackup(backupDriveLetter) {
     }
 }
 
-// --- 3. BUSINESS LOGIC WRAPPER (Daily Check) ---
 export function runDailyLocalBackup(backupDriveLetter) {
     if (!backupDriveLetter) return false;
     let success = false;
@@ -91,7 +88,6 @@ export function runDailyLocalBackup(backupDriveLetter) {
             return { ...bkp, time: stat.mtime };
         });
 
-        // 3. Delete all except the newest `keepCount`
         const toDelete = backups.slice(0, backups.length - keepCount);
 
         toDelete.forEach(bkp => {

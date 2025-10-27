@@ -1,7 +1,6 @@
 //..\src\services\stock.service.js
 import prisma from "../db/prisma.js";
 import AppError from "../utils/error.util.js";
-
 export const getProductStockTransactions = async ({ id }, { page, limit }) => {
     return await prisma.$transaction(async (tx) => {
         const productId = parseInt(id);
@@ -33,21 +32,20 @@ export const getStockTransactions = async (where, { page, limit }) =>
     });
 
 export const createStock = async (data, tx, next) => {
-    const { id: productId, stockQuantity, type, note, date, direction, saleId, paymentMethod } = data;
+    const { id: productId, stockQuantity, type, date, buyingPrice } = data;
+    let direction = type === "SUPPLIER_RETURN" ? "OUT" : "IN";
 
     const product = await tx.product.findUnique({
         where: { id: productId },
         select: {
             name: true,
             stockQuantity: true,
-            buyingPrice: true,
             stockTransaction: {
                 where: { initial: true },
                 select: { date: true },
             },
         },
     });
-
     if (!product) return next(new AppError("Product not found", 404));
 
     const productPurchaseDate = product.stockTransaction?.[0]?.date;
@@ -60,43 +58,42 @@ export const createStock = async (data, tx, next) => {
         );
     }
 
+    if (direction === "IN" && (!buyingPrice || buyingPrice <= 0))
+        return next(new AppError("Buying price is required for stock inflow transaction", 400));
+
     const currentStock = product.stockQuantity;
     let newStockQuantity =
         direction === "IN"
-            ? currentStock + stockQuantity
+            ?
+            currentStock + stockQuantity
             : currentStock - stockQuantity;
-
     if (newStockQuantity < 0)
-        return new next(AppError(`${product.name} current stock is ` + currentStock, 400))
+        return next(new AppError(`${product.name} current stock is ` + currentStock, 400))
 
-    const transaction = await tx.stockTransaction.create({
-        data: {
-            productId,
-            quantity: stockQuantity,
-            direction,
-            type,
-            note: `${product.name} # ${type === "RETURN" ? "Return to Supplier" : type} of ${stockQuantity} units. ${note}` || null,
-            date,
-        },
-    });
+    let finalNote = `${type} ${type === "SUPPLIER_RETURN" ? "to" : "of"} ${stockQuantity} units`
 
-    await tx.dailyTransaction.create({
-        data: {
-            type: paymentMethod,
-            amount: Number(product.buyingPrice) * Number(stockQuantity),
-            direction: "OUT",
-            date,
-            note: note || `${product.name} # Purchase of ${stockQuantity} units.`,
-            stockId: transaction.id,
-            productId,
-        }
-    });
+    const stockData = {
+        productId,
+        quantity: stockQuantity,
+        direction,
+        type,
+        date,
+        buyingPrice: buyingPrice,
+    }
+
+    if (product.stockTransaction.length === 0) {
+        stockData.initial = true;
+        finalNote = `INITIAL PURCHASE of ${stockQuantity} units`
+    }
+    finalNote += data.note ? ` | Note: ${data.note}` : "";
+
+    stockData.note = finalNote;
+    const transaction = await tx.stockTransaction.create({ data: stockData });
 
     await tx.product.update({
         where: { id: productId },
         data: { stockQuantity: newStockQuantity },
     });
-
     return transaction;
 };
 
@@ -110,12 +107,26 @@ export const deleteStockTransaction = async (id, next) => {
             where: { id },
         });
 
-        if (!existingTransaction) return new next(AppError("Transaction not found", 404))
+        if (!existingTransaction) return next(new AppError("Transaction not found", 404))
 
-        const { productId, quantity, direction } = existingTransaction;
+        const { productId, quantity, direction, initial, date } = existingTransaction;
 
-        const adjustment = direction === "IN" ? -quantity : quantity;
+        if (existingTransaction.saleId !== null)
+            return next(new AppError("Cannot delete: This stock transaction is directly linked to a Sale record.", 409));
 
+        if (initial) {
+            const subsequentTxCount = await tx.stockTransaction.count({
+                where: {
+                    productId: productId,
+                    date: { gt: date },
+                }
+            });
+            if (subsequentTxCount > 0)
+                return next(new AppError("Cannot delete: Initial stock cannot be deleted if subsequent inventory movements or sales exist.", 409));
+        }
+
+        const adjustment = direction === "IN" ? -quantity :
+            quantity;
 
         const product = await tx.product.findUnique({
             where: { id: productId },
@@ -123,16 +134,10 @@ export const deleteStockTransaction = async (id, next) => {
         });
         const newStockQuantity = product.stockQuantity + adjustment;
 
-        const d = await tx.dailyTransaction.findFirst({
-            where: { stockId: id },
-        });
-
         await tx.stockTransaction.delete({ where: { id } });
 
-        if (d) await tx.dailyTransaction.delete({ where: { id: d.id } });
-
         if (newStockQuantity < 0)
-            return new next(AppError(`${product.name} current stock is ` + currentStock, 400))
+            return next(new AppError(`Stock rollback failed: Deletion results in negative stock count for ${product.name}.`, 409))
 
         const updatedProduct = await tx.product.update({
             where: { id: productId },

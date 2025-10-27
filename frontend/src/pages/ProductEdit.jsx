@@ -1,23 +1,17 @@
 // src/pages/ProductEdit.jsx
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate, useNavigate } from "react-router-dom";
 import useFetch from "../hooks/useFetch";
 import useApi from "../utils/useApi";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import Spinner from "../components/Spinner";
-import Select from "../components/ui/Select";
-import { ArrowLeft, Package, Save, Plus, PackagePlus } from "lucide-react";
+import { ArrowLeft, Package, Save } from "lucide-react";
 import { showError } from "../utils/toast";
-
-// ✅ FIXED: Define combined stock type + direction for clarity
-const STOCK_TYPES = [
-  { label: "Purchase (IN)", value: "PURCHASE_IN" },
-  { label: "Supplier Return (OUT)", value: "RETURN_OUT" },
-];
 
 const ProductEdit = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const productId = Number(id);
 
   const {
@@ -115,44 +109,53 @@ const ProductEdit = () => {
       </div>
     );
 
-  if (loading && !productReport)
-    return (<section className="w-full h-full flex items-center justify-center">
+  if (loading && !productReport) return (
+    <section className="w-full h-full flex items-center justify-center">
       <Spinner overlay={false} />;
-    </section>)
+    </section>
+  )
 
-  if (!productReport)
-    return <div className="text-center p-4">Product not found.</div>;
+  if (!productReport) return (
+    <div className="w-full h-full flex items-center justify-center text-center p-4">
+      Product not found.
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4 mb-6">
-        <Link to={`/products/${productId}`}>
-          <Button variant="secondary" className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">
-          Edit Product: {editFormData.name}
-        </h1>
+      <div className="flex justify-between items-center gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <Link to={`/products/${productId}`}>
+            <Button variant="secondary" className="p-2">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </Link>
+          <h1 className="text-3xl font-bold">
+            Edit Product: {editFormData.name}
+          </h1>
+        </div>
+        <Button variant="secondary" onClick={() => navigate("/products/" + productId)}>
+          View Product
+        </Button>
       </div>
 
-      <div className="bg-[rgb(var(--bg))] p-8 rounded-md shadow-md border border-[rgb(var(--border))] max-w-5xl mx-auto">
+      <div className="bg-[rgb(var(--bg))] p-8 rounded-md shadow-md border border-[rgb(var(--border))] max-w-5x mx-auto">
         <form onSubmit={handleEditSubmit} className="space-y-6">
           <h2 className="text-xl font-semibold flex items-center mb-4 border-b pb-2">
             <Package className="w-5 h-5 mr-2 text-[rgb(var(--primary))]" />{" "}
             Update General & Pricing
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Input
-              label="Product Name"
-              id="name"
-              name="name"
-              value={editFormData.name}
-              onChange={handleEditChange}
-              required
-              error={editErrors.name}
-            />
+          <Input
+            label="Product Name"
+            id="name"
+            name="name"
+            value={editFormData.name}
+            onChange={handleEditChange}
+            required
+            error={editErrors.name}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               label="Category"
               id="category"
@@ -170,33 +173,19 @@ const ProductEdit = () => {
           </div>
 
           <h3 className="text-lg font-semibold border-b pb-2 pt-4">Pricing</h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="Buying Price (PKR)"
-              id="buyingPrice"
-              name="buyingPrice"
-              type="number"
-              value={editFormData.buyingPrice}
-              onChange={handleEditChange}
-              required
-              min={0.01}
-              step="0.01"
-              error={editErrors.buyingPrice || editErrors.priceConflict}
-            />
-            <Input
-              label="Selling Price (PKR)"
-              id="sellingPrice"
-              name="sellingPrice"
-              type="number"
-              value={editFormData.sellingPrice}
-              onChange={handleEditChange}
-              required
-              min={0.01}
-              step="0.01"
-              error={editErrors.sellingPrice || editErrors.priceConflict}
-            />
-          </div>
+          <Input
+            label="Selling Price (PKR)"
+            id="sellingPrice"
+            name="sellingPrice"
+            type="number"
+            value={editFormData.sellingPrice}
+            onChange={handleEditChange}
+            required
+            min={0.01}
+            step="0.01"
+            error={editErrors.sellingPrice || editErrors.priceConflict}
+            currency
+          />
 
           {editErrors.priceConflict && (
             <p className="text-sm text-[rgb(var(--error))]">
@@ -216,153 +205,8 @@ const ProductEdit = () => {
           </Button>
         </form>
       </div>
-
-      <AddStockForm onStockAdded={refetch} product={productReport.productOverview} />
     </div>
   );
 };
 
 export default ProductEdit;
-
-const AddStockForm = ({ onStockAdded, product }) => {
-  const { post, loading: stockLoading } = useApi();
-
-  const [stockFormData, setStockFormData] = useState({
-    stockQuantity: 1,
-    note: "",
-    date: new Date(product?.initialStockDate).toISOString().split("T")[0],
-    type: "PURCHASE_IN",
-  });
-
-  const [stockErrors, setStockErrors] = useState({});
-
-  const handleStockChange = (e) => {
-    const { name, value } = e.target;
-    let newValue = value;
-
-    if (name === "stockQuantity") newValue = Number(value);
-
-    setStockFormData((prev) => ({ ...prev, [name]: newValue }));
-    if (stockErrors[name]) setStockErrors((prev) => ({ ...prev, [name]: "" }));
-  };
-
-  const validateStockForm = (data = stockFormData) => {
-    const newErrors = {};
-    const quantity = Number(data.stockQuantity);
-
-    if (!Number.isInteger(quantity) || quantity < 1)
-      newErrors.stockQuantity =
-        "Quantity must be a whole number starting from 1.";
-    if (!data.type) newErrors.type = "Transaction type is required.";
-    if (!data.date) newErrors.date = "Date is required.";
-
-    setStockErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleStockSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateStockForm()) {
-      showError("Please correct the errors in the Add Stock form.");
-      return;
-    }
-
-    const [rawType, direction] = stockFormData.type.split("_");
-
-    const data = {
-      id: product?.id,
-      stockQuantity: stockFormData.stockQuantity,
-      note: stockFormData.note,
-      date: new Date(stockFormData.date).toISOString(),
-      type: rawType,
-      direction,
-    };
-
-    const result = await post(`/products/${product?.id}/stocks`,
-      data, { message: "Stock updated successfully" }
-    );
-
-    if (result) {
-      setStockFormData({
-        stockQuantity: 1,
-        note: "",
-        date: new Date().toISOString().split("T")[0],
-        type: "PURCHASE_IN",
-      });
-      if (onStockAdded) onStockAdded();
-    }
-  };
-
-  return (
-    <div className="bg-[rgb(var(--bg))] p-8 rounded-md shadow-md border border-[rgb(var(--border))] max-w-5xl mx-auto">
-      <form onSubmit={handleStockSubmit} className="space-y-6">
-        <h2 className="text-xl font-semibold flex items-center mb-4 border-b pb-2">
-          <Plus className="w-5 h-5 mr-2 text-[rgb(var(--secondary))]" /> Add
-          Stock / Record Return
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Select
-            label="Transaction Type"
-            name="type"
-            value={stockFormData.type}
-            onChange={handleStockChange}
-            options={STOCK_TYPES}
-            required
-            error={stockErrors.type}
-          />
-          <Select
-            label="Payment Method"
-            id="paymentMethod"
-            value={stockFormData.paymentMethod}
-            onChange={handleStockChange}
-            required
-            options={[
-              { value: "CASH", label: "Cash" },
-              { value: "BANK", label: "Bank" },
-            ]}
-          />
-          <Input
-            label="Quantity"
-            name="stockQuantity"
-            type="number"
-            value={stockFormData.stockQuantity}
-            onChange={handleStockChange}
-            required
-            min={1}
-            step="1"
-            error={stockErrors.stockQuantity}
-          />
-          <Input
-            label="Transaction Date"
-            name="date"
-            type="date"
-            value={stockFormData.date}
-            onChange={handleStockChange}
-            required
-            error={stockErrors.date}
-            min={new Date(product.initialStockDate).toISOString().split("T")[0]}
-            max={new Date().toISOString().split("T")[0]}
-          />
-          <Input
-            label="Note (Optional)"
-            name="note"
-            value={stockFormData.note}
-            onChange={handleStockChange}
-          />
-        </div>
-
-        <Button
-          type="submit"
-          variant="secondary"
-          loading={stockLoading}
-          className="w-full text-lg py-3 mt-8"
-        >
-          <PackagePlus className="w-5 h-5 mr-2" />
-          {stockLoading ? "Processing Stock..." : "Save Stock Transaction"}
-        </Button>
-      </form>
-    </div>
-  );
-};

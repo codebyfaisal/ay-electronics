@@ -15,6 +15,7 @@ const Table = ({
     remove: false,
   },
   loading = false,
+  id = false
 }) => {
   const { page, limit, total } = pagination;
   const totalPages = Math.ceil(total / limit);
@@ -25,7 +26,7 @@ const Table = ({
     {
       header: "S no.",
       accessor: "s_no",
-      render: (row, index) => <p>{startCount + index}.</p>,
+      render: (row, index) => <p>#{id ? row.id : startCount + index}</p>,
     },
     ...columns,
   ];
@@ -82,12 +83,13 @@ const Table = ({
                 {col.header}
               </th>
             ))}
-            <th
-              scope="col"
-              className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-white"
-            >
-              Actions
-            </th>
+            {(activeActions.view ||
+              activeActions.edit ||
+              activeActions.remove) &&
+              <th scope="col" className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-white">
+                Actions
+              </th>
+            }
           </tr>
         </thead>
         <tbody className="divide-y divide-[rgb(var(--border))]">

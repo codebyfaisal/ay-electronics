@@ -1,6 +1,6 @@
-import { payInstallment, updateInstallment } from "../services/installment.service.js";
+import { getInstallments, payInstallment, updateInstallment } from "../services/installment.service.js";
 import { installmentSchema, updateInstallmentSchema } from "../schemas/sale.schema.js";
-import { updateHandler } from "./generic.controller.js";
+import { getManyHandler, updateHandler } from "./generic.controller.js";
 
 export const handlePayInstallment = updateHandler(
     installmentSchema,
@@ -13,3 +13,8 @@ export const handleUpdateInstallment = updateHandler(
     updateInstallment,
     "Sale or Installment",
 );
+
+export const handleGetUpcomingInstallments = getManyHandler(
+    getInstallments,
+    "Upcoming Installments"
+)

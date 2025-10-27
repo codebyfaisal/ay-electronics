@@ -316,7 +316,6 @@
     </div>
 
     <script>
-      // Function to show custom message box (replaces alert())
       function showMessage(message) {
         const box = document.getElementById("message-box");
         document.getElementById("message-box-text").textContent = message;
@@ -329,8 +328,7 @@
           document.getElementById("message-box").style.display = "none";
         });
 
-      // DOM Elements
-      const loginForm = document.getElementById("login-form");
+        const loginForm = document.getElementById("login-form");
       const passwordInput = document.getElementById("password");
       const toggleBtn = document.getElementById("toggle-password");
       const showIcon = toggleBtn.querySelector(".show-icon");
@@ -338,12 +336,10 @@
       const loginButton = document.getElementById("login-button");
       const loginButtonSpan = loginButton.querySelector("span");
 
-      // Initial state for password toggle
       hideIcon.style.display = "none";
 
-      // --- Password Toggle Logic ---
       toggleBtn.addEventListener("click", (e) => {
-        e.preventDefault(); // Prevent button from submitting form
+        e.preventDefault();
         const isHidden = passwordInput.type === "password";
         passwordInput.type = isHidden ? "text" : "password";
 
@@ -351,7 +347,6 @@
         hideIcon.style.display = isHidden ? "inline" : "none";
       });
 
-      // --- Login Form Submission Logic ---
       loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 

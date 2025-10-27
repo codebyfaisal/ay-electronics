@@ -164,8 +164,8 @@ const Sales = () => {
       {
         header: "Remaining Installments",
         accessor: "remainingInstallments",
-        render: (row) => Number(row.remainingAmount).toLocaleString(),
-        className:"text-center"
+        render: (row) => (Number(row.totalInstallments) - Number(row.paidInstallments)).toLocaleString(),
+        className: "text-center"
       },
       {
         header: "Status", accessor: "status",
@@ -220,7 +220,7 @@ const Sales = () => {
                 }`}
               className="w-full"
             />
-            <span className="h-full flex items-center mb-3">by</span>
+            <span className="h-full flex items-center translate-y-3">by</span>
 
             <Select
               value={filters.customerFilterType}
@@ -230,7 +230,7 @@ const Sales = () => {
                   customerFilterType: e.target.value,
                 }))
               }
-              className="w-1/2"
+              className="w-1/4"
               options={customerSearchOptions}
             />
           </div>
@@ -276,6 +276,7 @@ const Sales = () => {
             view: true,
             remove: true,
           }}
+          id={true}
         />
       </div>
 

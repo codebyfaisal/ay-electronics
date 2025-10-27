@@ -24,7 +24,6 @@ const CustomerEdit = () => {
 
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     cnic: "",
     phone: "",
     address: "",
@@ -36,7 +35,6 @@ const CustomerEdit = () => {
     if (customer) {
       setFormData({
         name: customer.name || "",
-        email: customer.email || "",
         cnic: customer.cnic || "",
         phone: customer.phone || "",
         address: customer.address || "",
@@ -50,7 +48,6 @@ const CustomerEdit = () => {
 
     if (name === "phone" || name === "cnic")
       value = value.replace(/[^0-9]/g, "");
-    else if (name === "email") value = value.toLowerCase();
 
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -70,9 +67,6 @@ const CustomerEdit = () => {
 
     if (!data.address) newErrors.address = "Address is required.";
 
-    if (data.email && !/\S+@\S+\.\S+/.test(data.email))
-      newErrors.email = "Email is invalid.";
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -81,11 +75,7 @@ const CustomerEdit = () => {
     e.preventDefault();
 
     const trimmedData = {};
-    for (const key in formData) {
-      const value = formData[key].trim();
-      if (key === "email" && value === "") continue;
-      trimmedData[key] = value;
-    }
+    for (const key in formData) trimmedData[key] = formData[key].trim();
 
     setFormData(trimmedData);
 
@@ -94,17 +84,13 @@ const CustomerEdit = () => {
       return;
     }
 
-    const payload = {
-      ...trimmedData,
-    };
+    const payload = { ...trimmedData };
 
     const result = await put(`/customers/${customerId}`,
       payload, { message: "Customer updated successfully" }
     );
 
-    if (result) {
-      navigate(`/customers/${customerId}`);
-    }
+    if (result) navigate(`/customers/${customerId}`);
   };
 
   const loading = fetchLoading || updateLoading;
@@ -117,13 +103,17 @@ const CustomerEdit = () => {
     );
   }
 
-  if (loading && !customer) {
-    return <Spinner overlay={false} />;
-  }
+  if (loading && !customer) return (
+    <section className="w-full h-full flex items-center justify-center">
+      <Spinner overlay={false} />;
+    </section>
+  );
 
-  if (!customer) {
-    return <div className="text-center p-4">Customer not found.</div>;
-  }
+  if (!customer) return (
+    <div className="w-full h-full flex items-center justify-center text-center p-4">
+      Customer not found.
+    </div>
+  )
 
   return (
     <div className="space-y-6">
@@ -136,23 +126,24 @@ const CustomerEdit = () => {
         <h1 className="text-3xl font-bold">Edit Customer: {customer.name}</h1>
       </div>
 
-      <div className="bg-[rgb(var(--bg))] p-8 rounded-md shadow-md border border-[rgb(var(--border))] max-w-3xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <h2 className="text-xl font-semibold flex items-center mb-4">
+      <div className="bg-[rgb(var(--bg))] p-8 rounded-md shadow-md border border-[rgb(var(--border))]">
+        <form onSubmit={handleSubmit}>
+          <h2 className="text-xl font-semibold flex items-center mb-4 border-b pb-2">
             <User className="w-5 h-5 mr-2 text-[rgb(var(--primary))]" />{" "}
             Customer Information
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="Name"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              error={errors.name}
-            />
+          <Input
+            label="Name"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            placeholder={"e.g gohar"}
+            error={errors.name}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 mb-2">
             <Input
               label="CNIC (e.g., 1730122343445)"
               id="cnic"
@@ -163,6 +154,7 @@ const CustomerEdit = () => {
               maxLength={13}
               count={true}
               error={errors.cnic}
+              placeholder={"e.g 1730122343445"}
             />
             <Input
               label="Phone"
@@ -175,18 +167,9 @@ const CustomerEdit = () => {
               maxLength={11}
               error={errors.phone}
               count={true}
-            />
-            <Input
-              label="Email (Optional)"
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
+              placeholder={"e.g 032093996953"}
             />
           </div>
-
           <Input
             label="Address"
             id="address"
@@ -195,6 +178,7 @@ const CustomerEdit = () => {
             onChange={handleChange}
             required
             error={errors.address}
+            placeholder={"Peshawar"}
           />
 
           <Button
