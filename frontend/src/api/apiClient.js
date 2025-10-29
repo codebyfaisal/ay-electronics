@@ -10,17 +10,4 @@ const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = sessionStorage.getItem('auth_token');
-
-    if (token)
-      config.headers['Authorization'] = `Bearer ${token}`;
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-
-);
-
 export default apiClient;

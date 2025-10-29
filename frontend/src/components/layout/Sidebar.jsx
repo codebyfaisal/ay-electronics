@@ -13,6 +13,8 @@ import {
   Sun,
   Moon,
   WalletCards,
+  Settings,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -25,7 +27,8 @@ const navItems = [
   { name: "Products", path: "/products", icon: Package },
   { name: "Customers", path: "/customers", icon: Users },
   { name: "Sales", path: "/sales", icon: ShoppingBag },
-  { name: "One Shot Sale", path: "/one-shot-sale", icon: WalletCards },
+  { name: "One Shot Sale", path: "/one-shot-sale", icon: CreditCard },
+  { name: "Settings", path: "/settings", icon: Settings },
 ];
 
 const Sidebar = () => {

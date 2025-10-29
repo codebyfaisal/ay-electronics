@@ -168,7 +168,7 @@ const App = () =>
         <Route path="/sales/new" element={<SaleNew />} />
         <Route path="/sales/:id" element={<SaleDetail />} />
         <Route path="/one-shot-sale" element={<OneShotSaleNew />} />
-        <Route path="/setting" element={<Setting />} />
+        <Route path="/settings" element={<Setting />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

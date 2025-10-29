@@ -17,7 +17,7 @@ const Input = ({
   inputClass = null,
   ...rest
 }) => {
-  if (type === "number" && value < min) value = '';
+  if (type === "number" && value <= min) value = '';
 
   const inputClasses = `w-full p-3 border rounded-md ${inputClass ? inputClass : "bg-[rgb(var(--input-bg))] text-[rgb(var(--text))]"}
   focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]
