@@ -15,9 +15,6 @@
       "dest": "index.js"
     }
   ],
-  "env": {
-    "DATABASE_URL": "@database_url"
-  },
   "installCommand": "npm install",
   "buildCommand": "npm run build"
 }
