@@ -381,6 +381,7 @@ const ProductDetail = () => {
                     }`} >
                     <div className="relative">
                         <Table
+                            purpose="Product Stock transactions"
                             data={productTransactions}
                             columns={transactionColumns}
                             pagination={{

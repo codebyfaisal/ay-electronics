@@ -3,13 +3,10 @@ import React, { useState, useMemo } from "react";
 import useFetch from "../../hooks/useFetch";
 import useApi from "../../utils/useApi.js";
 import Table from "../Table";
-import {
-  Eye, Trash2, X, DollarSign, BarChart2, TrendingUp, Package, Users, Zap
-} from "lucide-react";
+import { X, DollarSign, BarChart2, TrendingUp, Package, Users, Zap } from "lucide-react";
 import classNames from 'classnames';
 import Button from "../ui/Button.jsx";
 
-// --- Helper Component: KPICard (Used in Sidebar) ---
 const KPICard = ({ title, value, icon: Icon, colorClass = 'text-green-500', currency = true }) => (
   <div className="p-6 rounded-lg shadow-xl flex items-center justify-between bg-[rgb(var(--bg))]">
     <div className="space-y-1">
@@ -23,7 +20,6 @@ const KPICard = ({ title, value, icon: Icon, colorClass = 'text-green-500', curr
   </div>
 );
 
-// --- Helper Component: SummaryDetailsSidebar ---
 const SummaryDetailsSidebar = ({ isOpen, setIsOpen, summary, months }) => {
 
   const period = summary
@@ -56,12 +52,10 @@ const SummaryDetailsSidebar = ({ isOpen, setIsOpen, summary, months }) => {
 
   return (
     <>
-      {/* Overlay */}
       {isOpen && <div className="fixed inset-0 opacity-50 z-40"
         onClick={() => setIsOpen(false)}>
       </div>}
 
-      {/* Sidebar */}
       <div className={sidebarClasses}>
         <div className="bg-[rgb(var(--bg-secondary))] sticky top-0 py-3.5 w-full space-y-2 px-6">
           <div className="flex justify-between items-center">
@@ -87,20 +81,16 @@ const SummaryDetailsSidebar = ({ isOpen, setIsOpen, summary, months }) => {
   );
 };
 
-
-// --- Main Component: MonthlySummaryTab ---
 const MonthlySummaryTab = () => {
   const [page, setPage] = useState(1);
-  const { del, loading: apiLoading } = useApi();
+  const { loading: apiLoading } = useApi();
 
-  // --- Sidebar State ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedSummary, setSelectedSummary] = useState(null);
 
   const {
     data: summaryData,
     loading: fetchLoading,
-    refetch,
   } = useFetch(`/finance/summary?page=${page}&limit=10`, {}, true);
 
   const summaries = summaryData?.monthlySummaries || [];
@@ -115,13 +105,11 @@ const MonthlySummaryTab = () => {
     []
   );
 
-  // 🛑 UPDATED: Handle actions passed from the Table component
   const handleAction = async (action, id) => {
     const summaryRow = summaries.find(s => s.id === id);
 
     switch (action) {
       case "view":
-        // 1. Find the full row data based on the ID passed from the Table
         if (summaryRow) {
           setSelectedSummary(summaryRow);
           setIsSidebarOpen(true);
@@ -132,7 +120,6 @@ const MonthlySummaryTab = () => {
     }
   };
 
-  // --- Columns Definition (NO Action column here) ---
   const columns = useMemo(
     () => [
       {
@@ -180,18 +167,17 @@ const MonthlySummaryTab = () => {
     <div className="space-y-6">
       <div className="min-h-64">
         <Table
+          purpose="summaries"
           data={summaries}
           columns={columns}
           pagination={{ page, limit: 10, total }}
           onPageChange={setPage}
-          onAction={handleAction} // 🛑 Pass the unified handler
+          onAction={handleAction}
           loading={fetchLoading || apiLoading}
-          // 🛑 Enable 'view' and 'remove' to show the built-in icons
           activeActions={{ view: true }}
         />
       </div>
 
-      {/* --- Sidebar Component --- */}
       <SummaryDetailsSidebar
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}

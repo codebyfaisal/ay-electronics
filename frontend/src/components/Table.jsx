@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Eye, Trash2, Edit } from "lucide-react";
 import Button from "./ui/Button";
 
 const Table = ({
+  purpose = "",
   data = [],
   columns = [],
   pagination = { page: 1, limit: 10, total: 0 },
@@ -68,7 +69,7 @@ const Table = ({
       )}
 
       <p className="text-sm mb-3 text-gray-500">
-        {startCount} of {total} sales
+        {startCount} of {total} {purpose}
       </p>
 
       <table className="min-w-full divide-y divide-[rgb(var(--border))]">

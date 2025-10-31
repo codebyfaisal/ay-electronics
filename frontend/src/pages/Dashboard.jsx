@@ -627,6 +627,7 @@ const Dashboard = () => {
             </div>
 
             <Table
+              purpose="upcoming-installments"
               data={upcomingInstallments?.installments || []}
               loading={upcomingLoading}
               columns={[
@@ -687,6 +688,7 @@ const Dashboard = () => {
             </div>
 
             <Table
+              purpose="late-installments"
               data={lateInstallments?.installments || []}
               loading={lateLoading}
               columns={[

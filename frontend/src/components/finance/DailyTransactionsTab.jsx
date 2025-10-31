@@ -237,6 +237,7 @@ const DailyTransactionsTab = () => {
 
       <div className="relative min-h-64">
         <Table
+          purpose="daily-transactions"
           data={transactions}
           columns={columns}
           pagination={{ page, limit: 10, total }}

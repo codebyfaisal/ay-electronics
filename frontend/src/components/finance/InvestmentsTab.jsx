@@ -208,6 +208,7 @@ const InvestmentsTab = () => {
 
       <div className="relative min-h-64">
         <Table
+          purpose="investments"
           data={investments || []}
           columns={columns}
           pagination={{

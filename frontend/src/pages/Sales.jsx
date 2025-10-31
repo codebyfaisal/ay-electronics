@@ -266,6 +266,7 @@ const Sales = () => {
 
       <div className="relative min-h-64">
         <Table
+          purpose="sales"
           data={sales}
           columns={columns}
           pagination={{ page, limit: 10, total }}
