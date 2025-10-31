@@ -59,4 +59,4 @@ ehthumbs.db
 
 /src/generated/prisma
 
-backend/prisma/migrations
+/prisma/migrations
