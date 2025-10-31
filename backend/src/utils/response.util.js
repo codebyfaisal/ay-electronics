@@ -1,4 +1,4 @@
-import prisma from "../db/prisma";
+import prisma from "../db/prisma.js";
 import { performDbBackup, readAppConfig } from "../os/dbBacker.os";
 import { updateAllOverdueStatus } from "../services/installment.service";
 import { generateSummary } from "../services/summary.service";
