@@ -1,2 +1,0 @@
-# aytraders-system
-
