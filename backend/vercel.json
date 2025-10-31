@@ -5,7 +5,7 @@
       "src": "index.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["dist/**"]
+        "includeFiles": ["dist/**", "prisma/schema.prisma"]
       }
     }
   ],
@@ -18,8 +18,7 @@
   "env": {
     "DATABASE_URL": "@database_url"
   },
-  "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "outputDirectory": "dist",
+  "buildCommand": "npm run build",
   "startCommand": "npm start"
 }
