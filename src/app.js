@@ -24,7 +24,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Resolve the frontend dist directory relative to current file location
-const frontendDist = path.join(__dirname, "ui", "dist");
+const frontendDist = path.join(__dirname, "..", "ui", "dist");
+
+console.log("Frontend dist directory:", frontendDist);
 
 // Test Routes
 app.get("/api/test", (req, res) => {
