@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import { fileURLToPath } from "url";
 import authRouter from "./routes/auth.route.js";
 import financeRouter from "./routes/finance.route.js";
 import customerRouter from "./routes/customer.route.js";
@@ -18,11 +19,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const frontendDist = path.join(process.cwd(), "ui", "dist");
+// Get the directory of the current module (file)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Resolve the frontend dist directory relative to current file location
+const frontendDist = path.join(__dirname, "ui", "dist");
 
 // Test Routes
 app.get("/api/test", (req, res) => {
-  return res.send("OK")
+  return res.send("OK");
 });
 
 // Api Routes
@@ -37,10 +43,9 @@ app.use("/api/settings", settingRouter);
 if (fs.existsSync(frontendDist)) {
   app.use(express.static(frontendDist));
 
-  app.get(/^(?!\/api).*/,
-    (req, res) =>
-      res.sendFile(path.join(frontendDist, "index.html"))
-  )
+  app.get(/^(?!\/api).*/, (req, res) =>
+    res.sendFile(path.join(frontendDist, "index.html"))
+  );
 }
 
 app.use(errorMiddleware);
