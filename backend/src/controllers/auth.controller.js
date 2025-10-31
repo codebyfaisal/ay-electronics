@@ -1,9 +1,10 @@
 import { deleteToken, saveToken } from "../store/session.store.js";
 import { errorRes, successRes } from "../utils/response.util.js";
-import loginHtml from "../views/login.html" with { type: "text" };
+// import loginHtml from "../views/login.html" with { type: "text" };
 import crypto from "crypto";
 
-export const handleLoginForm = (req, res) => res.send(loginHtml);
+// export const handleLoginForm = (req, res) => res.send(loginHtml);
+export const handleLoginForm = (req, res) => { };
 
 export const handleLogin = (req, res) => {
     try {
