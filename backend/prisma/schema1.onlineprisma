@@ -3,11 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = "postgresql://postgres.rxmzvwqqzgdpuooekabn:123456789@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres"
+  provider = "sqlite"
+  // provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
-// postgresql://postgres.rxmzvwqqzgdpuooekabn:123456789@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres
+postgresql://postgres.dhlbkvwyaeppyxzohzuk:thestoreofe@aws-1-ap-south-1.pooler.supabase.com:5432/postgres
+
 // ----------------------------------------------------
 // --- ENUMS ---
 // ----------------------------------------------------
@@ -15,7 +17,7 @@ datasource db {
 enum CashType {
   EXPENSE
   CASH
-  bank
+  BANK
   DEBT
 }
 
@@ -72,7 +74,7 @@ model Product {
   category      String   @default("uncategorized")
   brand         String   @default("generic")
   stockQuantity Int      @default(0)
-  sellingPrice  Decimal    @default(0)
+  sellingPrice  Float    @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -89,7 +91,7 @@ model StockTransaction {
   type        StockType
   direction   Direction
   quantity    Int
-  buyingPrice Decimal
+  buyingPrice Float
   note        String
   date        DateTime
   saleId      Int?
@@ -108,36 +110,36 @@ model Sale {
   productId         Int
   product           Product    @relation(fields: [productId], references: [id])
   quantity          Int        @default(1)
-  buyingPrice       Decimal      @default(0)
-  sellingPrice      Decimal      @default(0)
+  buyingPrice       Float      @default(0)
+  sellingPrice      Float      @default(0)
   returnQuantity    Int        @default(0)
-  returnAmount      Decimal?     @default(0)
+  returnAmount      Float?     @default(0)
   saleType          SaleType   @default(INSTALLMENT)
-  discount          Decimal      @default(0)
-  totalAmount       Decimal      @default(0)
-  perInstallment    Decimal      @default(0)
+  discount          Float      @default(0)
+  totalAmount       Float      @default(0)
+  perInstallment    Float      @default(0)
   totalInstallments Int        @default(10)
   paidInstallments  Int        @default(0)
-  paidAmount        Decimal      @default(0)
-  remainingAmount   Decimal      @default(0)
+  paidAmount        Float      @default(0)
+  remainingAmount   Float      @default(0)
   status            SaleStatus @default(ACTIVE)
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 
-  installments     Installation[]
+  installments     Installment[]
   stockTransaction StockTransaction[]
 
   @@map("sale")
 }
 
-model Installation {
+model Installment {
   id        Int               @id @default(autoincrement())
   saleId    Int
   sale      Sale              @relation(fields: [saleId], references: [id])
-  amount    Decimal           @default(0)
+  amount    Float             @default(0)
   paidDate  DateTime?
   dueDate   DateTime
-  status    InstallationStatus @default(UPCOMING)
+  status    InstallmentStatus @default(UPCOMING)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
@@ -147,8 +149,8 @@ model Installation {
 model Investment {
   id         Int      @id @default(autoincrement())
   investor   String
-  investment Decimal    @default(0)
-  note      String?
+  investment Float    @default(0)
+  note       String?
   date       DateTime @unique()
   createdAt  DateTime @default(now())
 
@@ -157,8 +159,8 @@ model Investment {
 
 model ManualTransaction {
   id        Int      @id @default(autoincrement())
-  type      cashType
-  amount    Decimal    @default(0)
+  type      CashType
+  amount    Float    @default(0)
   note      String?
   date      DateTime
   createdAt DateTime @default(now())
@@ -170,18 +172,18 @@ model MonthlySummary {
   id                   Int   @id @default(autoincrement())
   month                Int
   year                 Int
-  totalExpense         Decimal @default(0)
-  totalDebt            Decimal @default(0)
-  totalBank            Decimal @default(0)
-  totalCash            Decimal @default(0)
-  totalInvestment      Decimal @default(0)
-  totalSales           Decimal @default(0)
-  costOfStock          Decimal @default(0)
-  grossProfit          Decimal @default(0)
-  netProfit            Decimal @default(0)
-  stockValue           Decimal @default(0)
-  totalDebtOnCustomers Decimal @default(0)
-  totalAssetsValue     Decimal @default(0)
+  totalExpense         Float @default(0)
+  totalDebt            Float @default(0)
+  totalBank            Float @default(0)
+  totalCash            Float @default(0)
+  totalInvestment      Float @default(0)
+  totalSales           Float @default(0)
+  costOfStock          Float @default(0)
+  grossProfit          Float @default(0)
+  netProfit            Float @default(0)
+  stockValue           Float @default(0)
+  totalDebtOnCustomers Float @default(0)
+  totalAssetsValue     Float @default(0)
   totalStockQuantity   Int   @default(0)
   totalCustomers       Int   @default(0)
   totalProducts        Int   @default(0)
@@ -190,4 +192,4 @@ model MonthlySummary {
 
   @@unique([year, month], name: "year_month")
   @@map("monthly_summary")
-
+}
