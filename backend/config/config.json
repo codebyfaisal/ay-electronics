@@ -1,0 +1,6 @@
+{
+  "PASSWORD": "12345",
+  "BACKUP_DRIVE": "D",
+  "BACKUP_KEEP_COUNT": 5,
+  "START_DATE": "2025-08-01"
+}

@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------
+// --- ENUMS ---
+// ----------------------------------------------------
+
+enum CashType {
+  EXPENSE
+  CASH
+  BANK
+  DEBT
+}
+
+enum Direction {
+  IN
+  OUT
+}
+
+enum StockType {
+  PURCHASE
+  SALE
+  SUPPLIER_RETURN
+}
+
+enum SaleType {
+  CASH
+  INSTALLMENT
+}
+
+enum SaleStatus {
+  ACTIVE
+  COMPLETED
+  RETURNED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  LATE
+  PAID_LATE
+  UPCOMING
+}
+
+// ----------------------------------------------------
+// --- MODELS ---
+// ----------------------------------------------------
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  cnic      String?  @unique
+  phone     String
+  address   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sales Sale[]
+
+  @@map("customer")
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  category      String   @default("uncategorized")
+  brand         String   @default("generic")
+  stockQuantity Int      @default(0)
+  sellingPrice  Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sales            Sale[]
+  stockTransaction StockTransaction[]
+
+  @@map("product")
+}
+
+model StockTransaction {
+  id          Int       @id @default(autoincrement())
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id])
+  type        StockType
+  direction   Direction
+  quantity    Int
+  buyingPrice Float
+  note        String
+  date        DateTime
+  saleId      Int?
+  sale        Sale?     @relation(fields: [saleId], references: [id])
+  initial     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@map("stock_transaction")
+}
+
+model Sale {
+  id                Int        @id
+  saleDate          DateTime   @default(now())
+  customerId        Int
+  customer          Customer   @relation(fields: [customerId], references: [id])
+  productId         Int
+  product           Product    @relation(fields: [productId], references: [id])
+  quantity          Int        @default(1)
+  buyingPrice       Float      @default(0)
+  sellingPrice      Float      @default(0)
+  returnQuantity    Int        @default(0)
+  returnAmount      Float?     @default(0)
+  saleType          SaleType   @default(INSTALLMENT)
+  discount          Float      @default(0)
+  totalAmount       Float      @default(0)
+  perInstallment    Float      @default(0)
+  totalInstallments Int        @default(10)
+  paidInstallments  Int        @default(0)
+  paidAmount        Float      @default(0)
+  remainingAmount   Float      @default(0)
+  status            SaleStatus @default(ACTIVE)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  installments     Installment[]
+  stockTransaction StockTransaction[]
+
+  @@map("sale")
+}
+
+model Installment {
+  id        Int               @id @default(autoincrement())
+  saleId    Int
+  sale      Sale              @relation(fields: [saleId], references: [id])
+  amount    Float             @default(0)
+  paidDate  DateTime?
+  dueDate   DateTime
+  status    InstallmentStatus @default(UPCOMING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@map("installment")
+}
+
+model Investment {
+  id         Int      @id @default(autoincrement())
+  investor   String
+  investment Float    @default(0)
+  note       String?
+  date       DateTime @unique()
+  createdAt  DateTime @default(now())
+
+  @@map("investment")
+}
+
+model ManualTransaction {
+  id        Int      @id @default(autoincrement())
+  type      CashType
+  amount    Float    @default(0)
+  note      String?
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  @@map("manual_transaction")
+}
+
+model MonthlySummary {
+  id                   Int   @id @default(autoincrement())
+  month                Int
+  year                 Int
+  totalExpense         Float @default(0)
+  totalDebt            Float @default(0)
+  totalBank            Float @default(0)
+  totalCash            Float @default(0)
+  totalInvestment      Float @default(0)
+  totalSales           Float @default(0)
+  costOfStock          Float @default(0)
+  grossProfit          Float @default(0)
+  netProfit            Float @default(0)
+  stockValue           Float @default(0)
+  totalDebtOnCustomers Float @default(0)
+  totalAssetsValue     Float @default(0)
+  totalStockQuantity   Int   @default(0)
+  totalCustomers       Int   @default(0)
+  totalProducts        Int   @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([year, month], name: "year_month")
+  @@map("monthly_summary")
+}

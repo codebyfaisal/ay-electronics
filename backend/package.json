@@ -1,0 +1,30 @@
+{
+  "name": "ay-electronics-system-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "bun run index.js",
+    "dev": "bun --watch index.js",
+    "build:server-bundle": "npx esbuild index.js --bundle --platform=node --target=node18 --minify --allow-overwrite --external:express --external:@prisma/client --outfile=dist/server.cjs",
+    "build:frontend": "cd .. && npm run build:frontend",
+    "build:full": "bun run build:frontend && bun run build:server-bundle",
+    "build:exe": "bun run build:server-bundle && pkg . --targets node18-win-x64 --output ../AY_Electronics.exe",
+    "build:bun-exe": "bun build ./index.js --compile --target bun-windows-x64 --outfile ../AY_Electronics.exe --minify"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.18.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "2.8.5",
+    "dayjs": "1.11.18",
+    "dotenv": "17.2.3",
+    "express": "5.1.0",
+    "zod": "4.1.12"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11",
+    "nodemon": "3.1.10",
+    "prisma": "^6.17.1"
+  }
+}

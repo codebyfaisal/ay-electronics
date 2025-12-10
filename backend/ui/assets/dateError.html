@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="/assets/icon.ico" type="image/x-icon" />
+    <title>AY Electronics - Date Error</title>
+    <style>
+      @font-face {
+        font-family: "Noto Nastaliq Urdu";
+        src: url("/assets/NotoNastaliqUrdu-Regular.woff2") format("woff2"),
+          url("/assets/NotoNastaliqUrdu-Regular.woff") format("woff"),
+          url("/assets/NotoNastaliqUrdu-Regular.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Noto Nastaliq Urdu";
+        src: url("/assets/NotoNastaliqUrdu-Bold.woff2") format("woff2"),
+          url("/assets/NotoNastaliqUrdu-Bold.woff") format("woff"),
+          url("/assets/NotoNastaliqUrdu-Bold.ttf") format("truetype");
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Noto Nastaliq Urdu";
+        src: url("/assets/NotoNastaliqUrdu-SemiBold.woff2") format("woff2"),
+          url("/assets/NotoNastaliqUrdu-SemiBold.woff") format("woff"),
+          url("/assets/NotoNastaliqUrdu-SemiBold.ttf") format("truetype");
+        font-weight: 600;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Noto Nastaliq Urdu";
+        src: url("/assets/NotoNastaliqUrdu-Medium.woff2") format("woff2"),
+          url("/assets/NotoNastaliqUrdu-Medium.woff") format("woff"),
+          url("/assets/NotoNastaliqUrdu-Medium.ttf") format("truetype");
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Noto Nastaliq Urdu";
+        src: url("/assets/NotoNastaliqUrdu-VariableFont_wght.woff2")
+            format("woff2"),
+          url("/assets/NotoNastaliqUrdu-VariableFont_wght.woff") format("woff"),
+          url("/assets/NotoNastaliqUrdu-VariableFont_wght.ttf")
+            format("truetype");
+        font-weight: 100 900;
+        font-style: italic;
+        font-display: swap;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Noto Nastaliq Urdu", serif;
+      }
+
+      body {
+        background: linear-gradient(to bottom right, #07090c, #0e0916);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+
+      /* Card Container */
+      .card {
+        background-color: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        max-width: 28rem;
+        text-align: center;
+        padding: 0 1rem 2rem;
+        transition: transform 0.3s ease;
+      }
+
+      .card:hover {
+        transform: scale(1.05);
+      }
+
+      /* Emoji */
+      .emoji {
+        font-size: 3.5rem;
+        margin-bottom: 0.5rem;
+        color: #ef4444;
+      }
+
+      /* Title */
+      .title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #b91c1c;
+        margin-bottom: 0.5rem;
+      }
+
+      /* Main Message */
+      .message {
+        font-size: 1.1rem;
+        color: #374151;
+        margin-bottom: 1rem;
+      }
+
+      /* Divider */
+      hr {
+        border: none;
+        border-top: 1px solid #d1d5db;
+        margin: 1.5rem 0;
+      }
+
+      /* Note (English text) */
+      .note {
+        font-size: 0.9rem;
+        color: #4b5563;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+      }
+
+      /* Button */
+      .retry {
+        margin-top: 1.5rem;
+        padding: 0.5rem 1.5rem;
+        background-color: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.2s ease, transform 0.2s ease;
+      }
+
+      .retry:hover {
+        background-color: #dc2626;
+        transform: translateY(-2px);
+      }
+
+      .note-eng {
+        color: #242a33;
+        font-weight: 600;
+        background-color: #e6dbdb;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="emoji">⚠️</div>
+        <h1 class="title">براہ کرم اپنے سسٹم کی تاریخ درست کریں</h1>
+        <p class="message">ورنہ آپ کا ڈیٹا خراب یا ضائع ہو سکتا ہے۔</p>
+        <hr />
+        <p class="note">
+          Barah-e-karam apne system ki tareekh durust karein, warna aap ka data
+          kharab ya zaya ho sakta hai.
+        </p>
+        <p class="note note-eng">
+          Please check your system date and time settings. If the issue
+          persists, please contact your system administrator or IT department.
+        </p>
+        <button class="retry" onclick="window.location.reload()">
+          دوبارہ کوشش کریں
+        </button>
+      </div>
+    </div>
+  </body>
+</html>

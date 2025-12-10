@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="/assets/icon.ico" type="image/x-icon" />
+    <title>AY Electronics - Login</title>
+    <style>
+      :root {
+        --color-bg-light: 255 255 255;
+        --color-text-light: 0 0 0;
+        --bg-secondary-light: 243 244 246;
+        --border-light: 209 213 219;
+        --input-bg-light: 255 255 255;
+       
+        --color-bg-dark: 17 24 39;
+        --color-text-dark: 255 255 255;
+        --bg-secondary-dark: 31 41 55;
+        --border-dark: 55 65 81;
+        --input-bg-dark: 55 65 81;
+
+        --color-primary: 99 102 241;
+        --color-error: 239 68 68;
+
+        --bg: var(--color-bg-dark);
+        --text: var(--color-text-dark);
+        --bg-secondary: var(--bg-secondary-dark);
+        --border: var(--border-dark);
+        --input-bg: var(--input-bg-dark);
+      }
+     
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: var(--color-bg-dark);
+          --text: var(--color-text-dark);
+          --bg-secondary: var(--bg-secondary-dark);
+          --border: var(--border-dark);
+          --input-bg: var(--input-bg-dark);
+        }
+      }
+     
+      .light {
+        --bg: var(--color-bg-light);
+        --text: var(--color-text-light);
+        --bg-secondary: var(--bg-secondary-light);
+        --border: var(--border-light);
+        --input-bg: var(--input-bg-light);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        text-align: center;
+      }
+
+      body {
+        font-family: system-ui, sans-serif;
+        background-color: rgb(var(--bg));
+        color: rgb(var(--text));
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        padding: 1rem;
+      }
+
+      .container {
+        background-color: rgb(var(--bg-secondary));
+        padding: 2rem;
+        border-radius: 0.5rem;
+        width: 100%;
+        max-width: 28rem;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgb(var(--border));
+      }
+
+      .heading {
+        font-size: 1.875rem;
+        font-weight: bold;
+        color: rgb(var(--color-primary));
+        margin-bottom: 0.5rem;
+        text-align: center;
+      }
+
+      .subtext {
+        color: #9ca3af;
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .form-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+      }
+
+      label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        font-size: 0.875rem;
+        padding-left: 12px;
+      }
+
+      label span {
+        color: rgb(var(--color-error));
+      }
+
+      input {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+        border: 1px solid rgb(var(--border));
+        background-color: rgb(var(--input-bg));
+        color: rgb(var(--text));
+        font-size: 1rem;
+        transition: all 0.2s ease;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: rgb(var(--color-primary));
+        box-shadow: 0 0 0 1px rgb(var(--color-primary));
+      }
+     
+      .input-error {
+        border-color: rgb(var(--color-error)) !important;
+        box-shadow: 0 0 0 1px rgb(var(--color-error)) !important;
+      }
+
+      .password-toggle {
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+       
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        color: rgb(var(--text));
+      }
+
+      .password-toggle svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        fill: rgb(var(--color-primary));
+      }
+
+      .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: rgb(var(--color-bg-dark));
+        background-color: rgb(var(--color-primary));
+        border: none;
+        border-radius: 0.375rem;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.2s, opacity 0.2s;
+      }
+
+      .btn:hover {
+        opacity: 0.9;
+      }
+
+      .footer-text {
+        margin-top: 1.5rem;
+        font-size: 0.875rem;
+        color: #9ca3af;
+        text-align: center;
+      }
+     
+      #message-box {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgb(var(--bg-secondary));
+        border: 1px solid rgb(var(--border));
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        min-width: 300px;
+        text-align: center;
+        display: none;
+      }
+
+      #message-box-text {
+        margin-bottom: 15px;
+        color: rgb(var(--text));
+      }
+
+      #message-box-btn {
+        background-color: rgb(var(--color-primary));
+        color: rgb(var(--color-bg-dark));
+        width: 100px;
+        padding: 8px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <section>
+      <div class="container">
+        <h2 class="heading">Welcome Back</h2>
+        <p class="subtext">Sign in to continue to the dashboard.</p>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="password">Password <span>*</span></label>
+            <input
+              id="password"
+              type="password"
+              placeholder="Enter your password"
+              required
+            />
+
+            <!-- Toggle Buttons (Eye and Eye-Off) -->
+            <button type="button" class="password-toggle" id="toggle-password">
+              <span class="show-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns:xlink="http://www.w3.org/1999/xlink"
+                  fill="#000000"
+                  height="800px"
+                  width="800px"
+                  version="1.1"
+                  id="Capa_1"
+                  viewBox="0 0 297 297"
+                  xml:space="preserve"
+                >
+                  <path
+                    d="M294.943,150.859c-2.787-4.447-15.897-24.469-38.049-44.607c-32.998-29.998-70.482-45.855-108.402-45.855  c-37.921,0-75.406,15.857-108.407,45.855C15.501,128.6,2.045,150.813,1.483,151.746c-0.046,0.076-0.067,0.133-0.108,0.207  c-2.043,3.58-1.811,8.084,0.712,11.447c0.567,0.756,14.168,18.721,38.88,36.691c32.841,23.887,70.02,36.512,107.52,36.512  s74.681-12.625,107.523-36.51c24.712-17.973,38.315-35.938,38.882-36.693C297.686,159.676,297.702,154.557,294.943,150.859z   M242.386,121.33c12.041,10.881,21.241,21.871,27.209,29.758c-4.657,0.818-10.574,1.461-17.688,1.461  c-24.835,0-52.252-7.412-81.488-22.029c-27.013-13.508-53.199-20.355-77.83-20.355c-10.481,0-20.027,1.236-28.679,3.254  c26.708-21.309,55.11-32.107,84.581-32.107C181.414,81.311,213.006,94.775,242.386,121.33z M149.566,215.66  c-0.255,0.004-0.508,0.006-0.761,0.006c-30.753,0-57.03-24.543-58.756-55.059c-0.576-10.182,1.532-20.449,5.967-29.467  c14.75,0.443,30.273,3.752,46.367,9.863c-6.513,2.467-11.15,8.746-11.15,16.123c0,9.529,7.725,17.254,17.254,17.254  c9.53,0,17.255-7.725,17.255-17.254c0-2.188-0.423-4.27-1.165-6.195c14.216,6.877,28.109,12.195,41.607,15.93  C201.407,193.805,176.931,215.301,149.566,215.66z M24.399,157.406c7.854-7.486,24.003-19.863,48.444-24.496  c-2.939,9.27-4.228,19.109-3.676,28.879c0.802,14.186,5.504,27.418,13.009,38.691c-9.661-4.6-19.119-10.234-28.351-16.899  C40.133,173.697,30.127,163.703,24.399,157.406z M243.152,183.582c-9.23,6.662-18.688,12.297-28.347,16.897  c5.749-8.693,9.864-18.547,11.835-29.119c8.616,1.387,17.05,2.105,25.268,2.105c0,0,0,0,0.002,0c1.422,0,2.805-0.021,4.151-0.063  C252.219,176.703,247.908,180.148,243.152,183.582z"
+                  />
+                </svg>
+              </span>
+              <span class="hide-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="#ffffff"
+                  width="800px"
+                  height="800px"
+                  viewBox="0 0 512 512"
+                >
+                  <title>ionicons-v5-i</title>
+                  <path
+                    d="M432,448a15.92,15.92,0,0,1-11.31-4.69l-352-352A16,16,0,0,1,91.31,68.69l352,352A16,16,0,0,1,432,448Z"
+                  />
+                  <path
+                    d="M255.66,384c-41.49,0-81.5-12.28-118.92-36.5-34.07-22-64.74-53.51-88.7-91l0-.08c19.94-28.57,41.78-52.73,65.24-72.21a2,2,0,0,0,.14-2.94L93.5,161.38a2,2,0,0,0-2.71-.12c-24.92,21-48.05,46.76-69.08,76.92a31.92,31.92,0,0,0-.64,35.54c26.41,41.33,60.4,76.14,98.28,100.65C162,402,207.9,416,255.66,416a239.13,239.13,0,0,0,75.8-12.58,2,2,0,0,0,.77-3.31l-21.58-21.58a4,4,0,0,0-3.83-1A204.8,204.8,0,0,1,255.66,384Z"
+                  />
+                  <path
+                    d="M490.84,238.6c-26.46-40.92-60.79-75.68-99.27-100.53C349,110.55,302,96,255.66,96a227.34,227.34,0,0,0-74.89,12.83,2,2,0,0,0-.75,3.31l21.55,21.55a4,4,0,0,0,3.88,1A192.82,192.82,0,0,1,255.66,128c40.69,0,80.58,12.43,118.55,37,34.71,22.4,65.74,53.88,89.76,91a.13.13,0,0,1,0,.16,310.72,310.72,0,0,1-64.12,72.73,2,2,0,0,0-.15,2.95l19.9,19.89a2,2,0,0,0,2.7.13,343.49,343.49,0,0,0,68.64-78.48A32.2,32.2,0,0,0,490.84,238.6Z"
+                  />
+                  <path
+                    d="M256,160a95.88,95.88,0,0,0-21.37,2.4,2,2,0,0,0-1,3.38L346.22,278.34a2,2,0,0,0,3.38-1A96,96,0,0,0,256,160Z"
+                  />
+                  <path
+                    d="M165.78,233.66a2,2,0,0,0-3.38,1,96,96,0,0,0,115,115,2,2,0,0,0,1-3.38Z"
+                  />
+                </svg>
+              </span>
+            </button>
+          </div>
+
+          <button type="submit" class="btn" id="login-button">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-log-in w-5 h-5"
+            >
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+              <polyline points="10 17 15 12 10 7"></polyline>
+              <line x1="15" x2="3" y1="12" y2="12"></line>
+            </svg>
+            <span>Login</span>
+          </button>
+        </form>
+
+        <p class="footer-text">
+          Contact administration if you forgot your password.
+        </p>
+      </div>
+    </section>
+
+    <!-- Custom Message Box -->
+    <div id="message-box">
+      <p id="message-box-text"></p>
+      <button id="message-box-btn">OK</button>
+    </div>
+
+    <script>
+      function showMessage(message) {
+        const box = document.getElementById("message-box");
+        document.getElementById("message-box-text").textContent = message;
+        box.style.display = "block";
+      }
+
+      document
+        .getElementById("message-box-btn")
+        .addEventListener("click", () => {
+          document.getElementById("message-box").style.display = "none";
+        });
+
+      const loginForm = document.getElementById("login-form");
+      const passwordInput = document.getElementById("password");
+      const toggleBtn = document.getElementById("toggle-password");
+      const showIcon = toggleBtn.querySelector(".show-icon");
+      const hideIcon = toggleBtn.querySelector(".hide-icon");
+      const loginButton = document.getElementById("login-button");
+      const loginButtonSpan = loginButton.querySelector("span");
+
+      hideIcon.style.display = "none";
+
+      toggleBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const isHidden = passwordInput.type === "password";
+        passwordInput.type = isHidden ? "text" : "password";
+
+        showIcon.style.display = isHidden ? "none" : "inline";
+        hideIcon.style.display = isHidden ? "inline" : "none";
+      });
+
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        loginButton.disabled = true;
+        passwordInput.classList.remove("input-error");
+        loginButtonSpan.textContent = "Logging in...";
+
+        try {
+          const response = await fetch("/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ password: passwordInput.value }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            window.location.href = "/";
+          } else {
+            passwordInput.classList.add("input-error");
+            showMessage(
+              data.message || "Login failed. Please check your password."
+            );
+          }
+        } catch (error) {
+          console.error("Network or parsing error:", error);
+          passwordInput.classList.add("input-error");
+          showMessage("An error occurred. Check server connection.");
+        } finally {
+          loginButton.disabled = false;
+          loginButtonSpan.textContent = "Login";
+        }
+      });
+    </script>
+  </body>
+</html>
